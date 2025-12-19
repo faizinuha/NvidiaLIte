@@ -1,0 +1,11 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+C:\Aplikasi Win\NvidiaLIte\OverlayWindow.xaml.cs(37,27): error CS0104: 'RadioButton' is an ambiguous reference between 'System.Windows.Controls.RadioButton' and 'System.Windows.Forms.RadioButton' [C:\Aplikasi Win\NvidiaLIte\NvidiaCi_fdd0ct0k_wpftmp.csproj]
+
+Build FAILED.
+
+C:\Aplikasi Win\NvidiaLIte\OverlayWindow.xaml.cs(37,27): error CS0104: 'RadioButton' is an ambiguous reference between 'System.Windows.Controls.RadioButton' and 'System.Windows.Forms.RadioButton' [C:\Aplikasi Win\NvidiaLIte\NvidiaCi_fdd0ct0k_wpftmp.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:04.48

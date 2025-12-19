@@ -12,84 +12,157 @@
 
     <Border CornerRadius="0" Background="{StaticResource BackgroundColor}" BorderBrush="{StaticResource AccentColor}" BorderThickness="3,0,0,0">
         <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="60" /> <!-- Navbar column -->
+                <ColumnDefinition Width="*" />  <!-- Content column -->
+            </Grid.ColumnDefinitions>
 
-            <!-- Header -->
-            <Grid Grid.Row="0" Margin="20,25,20,10">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="NVIDIA" Foreground="{StaticResource AccentColor}" FontSize="18" FontWeight="Black" VerticalAlignment="Center"/>
-                    <TextBlock Text=" LITE" Foreground="{StaticResource TextColor}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            <!-- Navigation Sidebar (Left) -->
+            <Border Grid.Column="0" Background="#111111" BorderBrush="#222222" BorderThickness="0,0,1,0">
+                <StackPanel Margin="0,50,0,0">
+                    <RadioButton x:Name="DashboardTab" Style="{StaticResource NavButtonStyle}" IsChecked="True" Content="🎮" Tag="Dashboard" Click="Tab_Click" />
+                    <RadioButton x:Name="GalleryTab" Style="{StaticResource NavButtonStyle}" Content="🖼️" Tag="Gallery" Click="Tab_Click" />
+                    <RadioButton x:Name="SettingsTab" Style="{StaticResource NavButtonStyle}" Content="⚙️" Tag="Settings" Click="Tab_Click" />
                 </StackPanel>
-                
-                <Button VerticalAlignment="Center" HorizontalAlignment="Right" 
-                        Width="28" Height="28" Foreground="#88FFFFFF" Background="Transparent" BorderThickness="0" 
-                        Click="CloseButton_Click" Cursor="Hand">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border Background="{TemplateBinding Background}" CornerRadius="14">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                            <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#22FFFFFF"/>
-                                    <Setter Property="Foreground" Value="White"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                    <TextBlock Text="&#x2715;" FontSize="14"/>
-                </Button>
-            </Grid>
-            
-            <Separator Grid.Row="0" VerticalAlignment="Bottom" Background="#11FFFFFF" Margin="20,0" Height="1"/>
-
-            <!-- Content Area -->
-            <ListBox Grid.Row="1" x:Name="GameListBox"
-                     Background="Transparent"
-                     BorderThickness="0"
-                     Margin="10,10,10,10"
-                     Padding="0,0,5,0"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     SelectionChanged="GameListBox_SelectionChanged"
-                     ItemContainerStyle="{StaticResource GameItemStyle}"
-                     ItemTemplate="{StaticResource GameItemTemplate}">
-                <ListBox.Resources>
-                    <Style TargetType="ScrollBar">
-                        <Setter Property="Width" Value="8"/>
-                        <Setter Property="Background" Value="Transparent"/>
-                    </Style>
-                </ListBox.Resources>
-            </ListBox>
-            
-            <!-- Footer -->
-            <Border Grid.Row="2" Background="#0A000000" Padding="20">
-                <Button Content="SCAN FOR GAMES" 
-                        x:Name="ScanButton" 
-                        Click="ScanButton_Click"
-                        Height="45"
-                        FontSize="12"
-                        FontWeight="Bold"
-                        Cursor="Hand"
-                        Background="{StaticResource AccentColor}" 
-                        Foreground="Black" 
-                        BorderThickness="0">
-                    <Button.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="4" />
-                        </Style>
-                    </Button.Resources>
-                </Button>
             </Border>
+
+            <!-- Main Content Area (Right) -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <Grid Grid.Row="0" Margin="20,25,20,10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="NVIDIA" Foreground="{StaticResource AccentColor}" FontSize="18" FontWeight="Black" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="HeaderText" Text=" LITE" Foreground="{StaticResource TextColor}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    
+                    <Button VerticalAlignment="Center" HorizontalAlignment="Right" 
+                            Width="28" Height="28" Foreground="#88FFFFFF" Background="Transparent" BorderThickness="0" 
+                            Click="CloseButton_Click" Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" CornerRadius="14">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#22FFFFFF"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <TextBlock Text="&#x2715;" FontSize="14"/>
+                    </Button>
+                </Grid>
+                
+                <Separator Grid.Row="0" VerticalAlignment="Bottom" Background="#11FFFFFF" Margin="20,0" Height="1"/>
+
+                <!-- Content Views -->
+                <Grid Grid.Row="1">
+                    <!-- Dashboard View -->
+                    <Grid x:Name="DashboardView" Visibility="Visible">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        
+                        <ListBox Grid.Row="0" x:Name="GameListBox"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Margin="10"
+                                 Padding="0,0,5,0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 SelectionChanged="GameListBox_SelectionChanged"
+                                 ItemContainerStyle="{StaticResource GameItemStyle}"
+                                 ItemTemplate="{StaticResource GameItemTemplate}">
+                            <ListBox.Resources>
+                                <Style TargetType="ScrollBar">
+                                    <Setter Property="Width" Value="8"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                </Style>
+                            </ListBox.Resources>
+                        </ListBox>
+
+                        <Border Grid.Row="1" Background="#0A000000" Padding="15">
+                            <Button Content="SCAN FOR GAMES" 
+                                    x:Name="ScanButton" 
+                                    Click="ScanButton_Click"
+                                    Height="40" FontSize="11" FontWeight="Bold" Cursor="Hand"
+                                    Background="{StaticResource AccentColor}" Foreground="Black" BorderThickness="0">
+                                <Button.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="4" />
+                                    </Style>
+                                </Button.Resources>
+                            </Button>
+                        </Border>
+                    </Grid>
+
+                    <!-- Gallery View -->
+                    <Grid x:Name="GalleryView" Visibility="Collapsed" Margin="20">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="SCREENSHOTS" Foreground="{StaticResource TextColor}" FontSize="12" FontWeight="Bold" Margin="0,0,0,15" Opacity="0.6"/>
+                        
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="GalleryItemsControl">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="5" Width="100" Height="60" CornerRadius="4" Background="#222222" BorderBrush="#333333" BorderThickness="1">
+                                            <Image Source="{Binding}" Stretch="UniformToFill" />
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                        
+                        <TextBlock Grid.Row="1" Text="No screenshots found." x:Name="NoGalleryText" Visibility="Visible" Foreground="#555555" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Grid>
+
+                    <!-- Settings View -->
+                    <Grid x:Name="SettingsView" Visibility="Collapsed" Margin="25">
+                        <StackPanel>
+                            <TextBlock Text="SETTINGS" Foreground="{StaticResource TextColor}" FontSize="12" FontWeight="Bold" Margin="0,0,0,20" Opacity="0.6"/>
+                            
+                            <TextBlock Text="Global Hotkey" Foreground="#AAAAAA" FontSize="11" Margin="0,0,0,5"/>
+                            <Border Background="#222222" Padding="10" CornerRadius="4" Margin="0,0,0,20">
+                                <Grid>
+                                    <TextBlock Text="Alt + Z" Foreground="White" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Default" HorizontalAlignment="Right" Foreground="#555555" FontSize="10"/>
+                                </Grid>
+                            </Border>
+
+                            <CheckBox Content="Enable Screenshot Gallery" Foreground="White" IsChecked="True" Margin="0,0,0,15" />
+                            
+                            <TextBlock Text="Screenshot Hotkey" Foreground="#AAAAAA" FontSize="11" Margin="0,0,0,5"/>
+                            <Border Background="#222222" Padding="10" CornerRadius="4">
+                                <Grid>
+                                    <TextBlock Text="Win + Shift + S" Foreground="White" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Windows Built-in" HorizontalAlignment="Right" Foreground="#555555" FontSize="10"/>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Grid>
         </Grid>
     </Border>
 </Window>

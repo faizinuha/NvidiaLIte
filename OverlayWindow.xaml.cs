@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
+using System.Linq;
+using System.IO;
 
 namespace NvidiaCi
 {
@@ -28,8 +30,66 @@ namespace NvidiaCi
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            // Kita pindahkan LoadData ke sini agar daftar game di-refresh saat jendela muncul
             LoadData();
+            LoadGallery();
+        }
+
+        private void Tab_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.RadioButton rb && rb.Tag is string viewName)
+            {
+                SwitchView(viewName);
+            }
+        }
+
+        private void SwitchView(string viewName)
+        {
+            DashboardView.Visibility = Visibility.Collapsed;
+            GalleryView.Visibility = Visibility.Collapsed;
+            SettingsView.Visibility = Visibility.Collapsed;
+
+            switch (viewName)
+            {
+                case "Dashboard":
+                    DashboardView.Visibility = Visibility.Visible;
+                    HeaderText.Text = " LITE";
+                    break;
+                case "Gallery":
+                    GalleryView.Visibility = Visibility.Visible;
+                    HeaderText.Text = " GALLERY";
+                    LoadGallery();
+                    break;
+                case "Settings":
+                    SettingsView.Visibility = Visibility.Visible;
+                    HeaderText.Text = " SETTINGS";
+                    break;
+            }
+        }
+
+        private void LoadGallery()
+        {
+            try
+            {
+                string screenshotPath = System.IO.Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), 
+                    "Screenshots");
+
+                if (System.IO.Directory.Exists(screenshotPath))
+                {
+                    var files = System.IO.Directory.GetFiles(screenshotPath, "*.png")
+                        .OrderByDescending(f => System.IO.File.GetCreationTime(f))
+                        .Take(12)
+                        .ToList();
+
+                    GalleryItemsControl.ItemsSource = files;
+                    NoGalleryText.Visibility = files.Any() ? Visibility.Collapsed : Visibility.Visible;
+                }
+                else
+                {
+                    NoGalleryText.Visibility = Visibility.Visible;
+                }
+            }
+            catch { }
         }
 
         private void LoadData()
@@ -129,10 +189,14 @@ namespace NvidiaCi
 
         private void PositionWindow()
         {
-            this.Width = 320;
-            this.Left = SystemParameters.WorkArea.Right - this.Width;
+            this.Width = 380; // Slightly wider for tabs
+            this.Left = SystemParameters.PrimaryScreenWidth - this.Width;
             this.Top = 0;
-            this.Height = SystemParameters.WorkArea.Height;
+            this.Height = SystemParameters.PrimaryScreenHeight;
+            
+            // Ensure we are truly on top
+            this.Topmost = false;
+            this.Topmost = true;
         }
     }
 }

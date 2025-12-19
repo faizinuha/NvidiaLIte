@@ -66,9 +66,12 @@ namespace NvidiaCi
             }
             else
             {
+                // Re-position before showing to ensure it covers the current primary screen resolution
                 _overlayWindow.Show();
-                _overlayWindow.Activate(); // Bawa ke depan
-                _overlayWindow.Topmost = true; // Pastikan selalu di atas jendela lain
+                _overlayWindow.Activate(); 
+                _overlayWindow.Topmost = false;
+                _overlayWindow.Topmost = true; // Flashing Topmost helps it stay on top
+                _overlayWindow.Focus();
             }
         }
 

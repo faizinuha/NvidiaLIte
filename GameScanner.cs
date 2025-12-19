@@ -19,7 +19,15 @@ namespace NvidiaCi
             "Common Files", 
             "Microsoft", 
             "WindowsApps",
-            "Reference Assemblies"
+            "Reference Assemblies",
+            "MSBuild",
+            "Git",
+            "NodeJS",
+            "PowerShell",
+            "Packages",
+            "DriverStore",
+            "Temp",
+            "Uninstall Information"
         };
 
         public List<GameItem> ScanForGames(int maxResults = 100)
