@@ -67,6 +67,7 @@ namespace NvidiaCi
             else
             {
                 // Re-position before showing to ensure it covers the current primary screen resolution
+                _overlayWindow.PositionWindow();
                 _overlayWindow.Show();
                 _overlayWindow.Activate(); 
                 _overlayWindow.Topmost = false;

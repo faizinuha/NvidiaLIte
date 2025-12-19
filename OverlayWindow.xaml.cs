@@ -185,16 +185,25 @@ namespace NvidiaCi
 
         private void ScanButton_Click(object sender, RoutedEventArgs e) => RefreshGameList();
         private void OnClosed(object? sender, EventArgs e) => UnregisterGlobalHotkey();
+        private void Background_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.OriginalSource is Grid)
+            {
+                this.Hide();
+            }
+        }
+
         private void CloseButton_Click(object sender, RoutedEventArgs e) => this.Hide();
 
-        private void PositionWindow()
+        public void PositionWindow()
         {
-            this.Width = 380; // Slightly wider for tabs
-            this.Left = SystemParameters.PrimaryScreenWidth - this.Width;
+            // Full Screen coverage
+            this.Left = 0;
             this.Top = 0;
+            this.Width = SystemParameters.PrimaryScreenWidth;
             this.Height = SystemParameters.PrimaryScreenHeight;
             
-            // Ensure we are truly on top
+            // Ensure transparency and topmost
             this.Topmost = false;
             this.Topmost = true;
         }
