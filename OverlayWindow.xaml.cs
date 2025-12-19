@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,24 +14,29 @@ namespace myapp
         public OverlayWindow()
         {
             InitializeComponent();
-            this.Loaded += OnLoaded;
+            
+            // PENTING: Paksa pembuatan Handle agar WinAPI bisa mendaftarkan hotkey 
+            // meskipun jendela belum ditampilkan (Show).
+            var handle = new WindowInteropHelper(this).EnsureHandle();
+            
+            // Daftarkan hotkey segera setelah handle tersedia
+            RegisterGlobalHotkey(handle);
+
             this.Closed += OnClosed;
             PositionWindow();
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            RegisterGlobalHotkey();
-            LoadData(); // Load dari JSON saat startup
+            // Kita pindahkan LoadData ke sini agar daftar game di-refresh saat jendela muncul
+            LoadData();
         }
 
         private void LoadData()
         {
             var games = _dataManager.LoadGames();
-            
             if (games.Count == 0)
             {
-                // Jika tidak ada data tersimpan, coba scan otomatis pertama kali
                 RefreshGameList();
             }
             else
@@ -47,11 +51,7 @@ namespace myapp
             {
                 var scanner = new GameScanner();
                 var games = scanner.ScanForGames(100);
-                
-                // Simpan ke ListBox UI
                 GameListBox.ItemsSource = games;
-                
-                // Simpan ke file JSON
                 _dataManager.SaveGames(games);
             }
             catch (Exception ex)
@@ -59,6 +59,45 @@ namespace myapp
                 System.Windows.MessageBox.Show($"Error scanning games: {ex.Message}");
             }
         }
+
+        // --- WINAPI HOTKEY LOGIC ---
+
+        private void RegisterGlobalHotkey(IntPtr handle)
+        {
+            var source = HwndSource.FromHwnd(handle);
+            source?.AddHook(WndProc);
+
+            uint vk = (uint)HotkeyHelper.GetVirtualKeyCode(System.Windows.Input.Key.Z);
+            bool success = HotkeyHelper.RegisterHotKey(handle, HOTKEY_ID, HotkeyHelper.MOD_ALT, vk);
+            
+            if (!success)
+            {
+                // Jika gagal, biasanya karena aplikasi lain sudah pakai Alt+Z
+                Debug.WriteLine("Failed to register hotkey.");
+            }
+        }
+
+        private void UnregisterGlobalHotkey()
+        {
+            var handle = new WindowInteropHelper(this).Handle;
+            HotkeyHelper.UnregisterHotKey(handle, HOTKEY_ID);
+        }
+
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == HotkeyHelper.WM_HOTKEY && wParam.ToInt32() == HOTKEY_ID)
+            {
+                // Gunakan dispatcher untuk memastikan berjalan di UI Thread
+                this.Dispatcher.Invoke(() => {
+                    if (System.Windows.Application.Current is App app) 
+                        app.ToggleOverlay();
+                });
+                handled = true;
+            }
+            return IntPtr.Zero;
+        }
+
+        // --- SISANYA TETAP SAMA ---
 
         private void GameListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -73,65 +112,20 @@ namespace myapp
         {
             try
             {
-                if (string.IsNullOrEmpty(exePath) || !System.IO.File.Exists(exePath))
-                {
-                    System.Windows.MessageBox.Show("Game executable not found.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                ProcessStartInfo startInfo = new ProcessStartInfo
-                {
-                    FileName = exePath,
+                if (string.IsNullOrEmpty(exePath) || !System.IO.File.Exists(exePath)) return;
+                Process.Start(new ProcessStartInfo { 
+                    FileName = exePath, 
                     WorkingDirectory = System.IO.Path.GetDirectoryName(exePath),
-                    UseShellExecute = true
-                };
-
-                Process.Start(startInfo);
+                    UseShellExecute = true 
+                });
                 this.Hide();
             }
-            catch (Exception ex)
-            {
-                System.Windows.MessageBox.Show($"Error: {ex.Message}", "Launch Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            catch { }
         }
 
-        private void ScanButton_Click(object sender, RoutedEventArgs e)
-        {
-            RefreshGameList();
-        }
-
-        // --- WINAPI HOTKEY LOGIC ---
-
-        private void OnClosed(object? sender, EventArgs e)
-        {
-            UnregisterGlobalHotkey();
-        }
-
-        private void RegisterGlobalHotkey()
-        {
-            var handle = new WindowInteropHelper(this).EnsureHandle();
-            var source = HwndSource.FromHwnd(handle);
-            source?.AddHook(WndProc);
-
-            uint vk = (uint)HotkeyHelper.GetVirtualKeyCode(System.Windows.Input.Key.Z);
-            HotkeyHelper.RegisterHotKey(handle, HOTKEY_ID, HotkeyHelper.MOD_ALT, vk);
-        }
-
-        private void UnregisterGlobalHotkey()
-        {
-            var handle = new WindowInteropHelper(this).Handle;
-            HotkeyHelper.UnregisterHotKey(handle, HOTKEY_ID);
-        }
-
-        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
-        {
-            if (msg == HotkeyHelper.WM_HOTKEY && wParam.ToInt32() == HOTKEY_ID)
-            {
-                if (System.Windows.Application.Current is App app) app.ToggleOverlay();
-                handled = true;
-            }
-            return IntPtr.Zero;
-        }
+        private void ScanButton_Click(object sender, RoutedEventArgs e) => RefreshGameList();
+        private void OnClosed(object? sender, EventArgs e) => UnregisterGlobalHotkey();
+        private void CloseButton_Click(object sender, RoutedEventArgs e) => this.Hide();
 
         private void PositionWindow()
         {
@@ -139,11 +133,6 @@ namespace myapp
             this.Left = SystemParameters.WorkArea.Right - this.Width;
             this.Top = 0;
             this.Height = SystemParameters.WorkArea.Height;
-        }
-
-        private void CloseButton_Click(object sender, RoutedEventArgs e)
-        {
-            this.Hide();
         }
     }
 }

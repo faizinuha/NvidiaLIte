@@ -1,118 +1,40 @@
 <Window x:Class="myapp.OverlayWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:myapp"
-        mc:Ignorable="d"
-        Title="Overlay Sidebar" 
-        Width="320" 
-        WindowStyle="None" 
-        AllowsTransparency="True" 
-        Topmost="True" 
+        Title="Game Overlay"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
         ShowInTaskbar="False"
-        Background="Transparent">
+        ResizeMode="NoResize"
+        Loaded="OnLoaded">
 
-    <Border Background="#E6121212" CornerRadius="15,0,0,15" BorderBrush="#33FFFFFF" BorderThickness="1,0,0,0">
-        <Grid Margin="20">
+    <Border CornerRadius="10" Background="#DD222222" BorderBrush="#FF444444" BorderThickness="1" Margin="10">
+        <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/> <!-- Header -->
-                <RowDefinition Height="*"/>    <!-- Game List -->
-                <RowDefinition Height="Auto"/> <!-- Footer -->
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Header -->
-            <StackPanel Grid.Row="0" Margin="0,0,0,20">
-                <Grid>
-                    <TextBlock Text="GAME HUB" FontSize="18" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
-                    <Button Content="✕" 
-                            HorizontalAlignment="Right" 
-                            Background="Transparent" 
-                            Foreground="#88FFFFFF" 
-                            BorderThickness="0" 
-                            FontSize="16"
-                            Cursor="Hand"
-                            Click="CloseButton_Click"/>
-                </Grid>
-                <Separator Background="#22FFFFFF" Margin="0,15,0,0"/>
-            </StackPanel>
-
-            <!-- Game List -->
-            <ListBox x:Name="GameListBox" 
-                     Grid.Row="1" 
-                     Background="Transparent" 
-                     BorderThickness="0" 
-                     ScrollViewer.VerticalScrollBarVisibility="Auto"
-                     SelectionChanged="GameListBox_SelectionChanged">
-                <ListBox.ItemContainerStyle>
-                    <Style TargetType="ListBoxItem">
-                        <Setter Property="Padding" Value="10"/>
-                        <Setter Property="Margin" Value="0,2"/>
-                        <Setter Property="Foreground" Value="#CCCCCC"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ListBoxItem">
-                                    <Border x:Name="ItemBorder" Background="Transparent" CornerRadius="8" Padding="{TemplateBinding Padding}">
-                                        <ContentPresenter />
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="ItemBorder" Property="Background" Value="#1AFFFFFF"/>
-                                            <Setter Property="Foreground" Value="White"/>
-                                        </Trigger>
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter TargetName="ItemBorder" Property="Background" Value="#33FFFFFF"/>
-                                            <Setter Property="Foreground" Value="White"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </ListBox.ItemContainerStyle>
-                
-                <ListBox.ItemTemplate>
-                    <DataTemplate DataType="{x:Type local:GameItem}">
-                        <StackPanel Orientation="Horizontal">
-                            <!-- Placeholder Icon -->
-                            <Border Width="40" Height="40" Background="#333" CornerRadius="5" Margin="0,0,10,0">
-                                <TextBlock Text="🎮" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20"/>
-                            </Border>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
-                                <TextBlock Text="Click to play" FontSize="11" Foreground="#66FFFFFF"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-
-            <!-- Footer -->
-            <StackPanel Grid.Row="2" Margin="0,20,0,0">
-                <Separator Background="#22FFFFFF" Margin="0,0,0,15"/>
-                <Button Content="SCAN GAMES" 
-                        Margin="0,0,0,10"
-                        Padding="8"
-                        Background="#333"
-                        Foreground="White"
-                        BorderThickness="0"
-                        Click="ScanButton_Click"/>
-                
-                <Button Content="HIDE SIDEBAR (ALT + Z)" 
-                        Padding="10" 
-                        Background="#252525" 
-                        Foreground="White" 
-                        BorderBrush="#44FFFFFF" 
-                        BorderThickness="1"
-                        Cursor="Hand"
-                        Click="CloseButton_Click">
-                    <Button.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="8"/>
-                        </Style>
-                    </Button.Resources>
-                </Button>
-            </StackPanel>
+            <TextBlock Grid.Row="0" Text="Game Hub" FontSize="20" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,10,0,10"/>
+            
+            <Button Grid.Row="0" Content="&#x2715;" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="10" 
+                    Width="30" Height="30" Foreground="White" Background="#55FF0000" BorderThickness="0" 
+                    Click="CloseButton_Click" />
+            
+            <ListBox Grid.Row="1" x:Name="GameListBox"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     SelectionChanged="GameListBox_SelectionChanged"
+                     ItemContainerStyle="{StaticResource GameItemStyle}"
+                     ItemTemplate="{StaticResource GameItemTemplate}"/>
+            
+            <Button Grid.Row="2" Content="SCAN GAMES" 
+                    x:Name="ScanButton" 
+                    Click="ScanButton_Click"
+                    Margin="10" Padding="10,5" Background="#FF007ACC" Foreground="White" BorderThickness="0"/>
         </Grid>
     </Border>
 </Window>

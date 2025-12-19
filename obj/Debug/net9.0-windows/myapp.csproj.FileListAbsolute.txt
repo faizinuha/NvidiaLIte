@@ -1,5 +1,4 @@
 /home/user/nvidialite/obj/Debug/net9.0-windows/OverlayWindow.baml
-/home/user/nvidialite/obj/Debug/net9.0-windows/App.baml
 /home/user/nvidialite/obj/Debug/net9.0-windows/OverlayWindow.g.cs
 /home/user/nvidialite/obj/Debug/net9.0-windows/App.g.cs
 /home/user/nvidialite/obj/Debug/net9.0-windows/myapp_MarkupCompile.cache
@@ -19,5 +18,3 @@
 /home/user/nvidialite/obj/Debug/net9.0-windows/myapp.pdb
 /home/user/nvidialite/obj/Debug/net9.0-windows/myapp.genruntimeconfig.cache
 /home/user/nvidialite/obj/Debug/net9.0-windows/ref/myapp.dll
-/home/user/nvidialite/obj/Debug/net9.0-windows/GeneratedInternalTypeHelper.g.cs
-/home/user/nvidialite/obj/Debug/net9.0-windows/myapp_MarkupCompile.lref

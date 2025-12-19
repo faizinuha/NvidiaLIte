@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Forms;
 
@@ -9,57 +10,57 @@ namespace myapp
         private OverlayWindow? _overlayWindow;
 
         protected override void OnStartup(StartupEventArgs e)
-        {
+        {            
             base.OnStartup(e);
 
+            // 1. Buat instance jendela overlay tapi jangan tampilkan
             _overlayWindow = new OverlayWindow();
-            // The window is created but not shown. We will control its visibility.
 
+            // 2. Setup NotifyIcon (System Tray)
             _notifyIcon = new NotifyIcon();
-            // _notifyIcon.Icon = new System.Drawing.Icon("Assets/icon.ico"); // This line is commented out.
-            _notifyIcon.Text = "My WPF App";
+            _notifyIcon.Icon = new System.Drawing.Icon("Assets/icon.ico"); // Pastikan file icon ada
+            _notifyIcon.Text = "Game Hub Overlay";
             _notifyIcon.Visible = true;
 
-            _notifyIcon.DoubleClick += (s, args) => ShowOverlay();
+            // 3. Tambahkan event handler untuk double-click
+            _notifyIcon.DoubleClick += (s, args) => ToggleOverlay();
 
+            // 4. Buat menu konteks (klik kanan)
             var contextMenu = new ContextMenuStrip();
-            contextMenu.Items.Add("Show/Hide Overlay", null, (s, args) => ToggleOverlay());
+            contextMenu.Items.Add("Show/Hide Sidebar (Alt+Z)", null, (s, args) => ToggleOverlay());
+            contextMenu.Items.Add("-"); // Separator
             contextMenu.Items.Add("Exit", null, (s, args) => ShutdownApp());
             _notifyIcon.ContextMenuStrip = contextMenu;
-        }
 
-        protected override void OnExit(ExitEventArgs e)
-        {
-            if (_notifyIcon != null)
-            {
-                _notifyIcon.Dispose();
-            }
-            base.OnExit(e);
+            // Penting: Hentikan aplikasi dari shutdown otomatis
+            this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
         }
 
         public void ToggleOverlay()
         {
-            if (_overlayWindow?.IsVisible == true)
+            if (_overlayWindow == null) return;
+
+            if (_overlayWindow.IsVisible)
             {
                 _overlayWindow.Hide();
             }
             else
             {
-                ShowOverlay();
+                _overlayWindow.Show();
+                _overlayWindow.Activate(); // Bawa ke depan
+                _overlayWindow.Topmost = true; // Pastikan selalu di atas jendela lain
             }
         }
 
-        public void ShowOverlay()
+        protected override void OnExit(ExitEventArgs e)
         {
-            if (_overlayWindow != null)
-            {
-                _overlayWindow.Show();
-                _overlayWindow.Activate(); // Bring to front
-            }
+            _notifyIcon?.Dispose(); // Bersihkan ikon saat aplikasi ditutup
+            base.OnExit(e);
         }
 
         private void ShutdownApp()
         {
+            // Ini akan memicu OnExit dan menutup aplikasi dengan benar
             System.Windows.Application.Current.Shutdown();
         }
     }
