@@ -1,1 +1,22 @@
+# Sertifikat & Build Output
 ZeroMixCert.pfx
+publish/
+build/
+build_log.txt
+
+# .NET Core / WPF khusus
+[Bb]in/
+[Oo]bj/
+Bin 
+Obj
+# Visual Studio / VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS Files
+Thumbs.db
+desktop.ini

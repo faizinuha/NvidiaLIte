@@ -1,6 +1,10 @@
 # PowerShell Script to build and compile NVIDIA LITE Installer
 
-$ProjectRoot = Resolve-Path ".."
+Write-Host "--- 0. Stopping any running application instances ---" -ForegroundColor Cyan
+Stop-Process -Name "NvidiaCi" -Force -ErrorAction SilentlyContinue
+
+
+$ProjectRoot = Resolve-Path "$PSScriptRoot\.."
 $BuildDir = "$ProjectRoot\bin\Release\net9.0-windows\win-x64\publish"
 $InnoSetupExe = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 $IssScript = "$PSScriptRoot\compile.iss"
