@@ -10,21 +10,26 @@
         ResizeMode="NoResize"
         Loaded="OnLoaded">
 
-    <!-- Full Screen Semi-Transparent Background -->
-    <Grid Background="#AA000000" MouseLeftButtonDown="Background_MouseLeftButtonDown">
+    <!-- Main Root Grid -->
+    <Grid>
+        <!-- Full Screen Semi-Transparent Background (Glass effect like Game Bar) -->
+        <Grid Background="#22000000" MouseLeftButtonDown="Background_MouseLeftButtonDown" />
+
+        <!-- Notification/Flash Effect for Screenshots -->
+        <Border x:Name="FlashBorder" Background="White" Visibility="Collapsed" IsHitTestVisible="False" Opacity="0.5"/>
         
-        <!-- Sidebar Container (Right Side) -->
-        <Border HorizontalAlignment="Right" Width="420" Background="{StaticResource BackgroundColor}" 
-                BorderBrush="{StaticResource AccentColor}" BorderThickness="2,0,0,0">
+        <!-- Sidebar Container (Left Side) -->
+        <Border x:Name="SidebarBorder" HorizontalAlignment="Left" Width="450" Background="{StaticResource BackgroundColor}" 
+                BorderBrush="{StaticResource AccentColor}" BorderThickness="0,0,2,0">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="70" /> <!-- Navbar column -->
+                    <ColumnDefinition Width="75" /> <!-- Navbar column -->
                     <ColumnDefinition Width="*" />  <!-- Content column -->
                 </Grid.ColumnDefinitions>
 
-                <!-- Navigation Sidebar (Left) -->
-                <Border Grid.Column="0" Background="#111111" BorderBrush="#222222" BorderThickness="0,0,1,0">
-                    <StackPanel Margin="0,60,0,0">
+                <!-- Navigation Sidebar (Leftmost) -->
+                <Border Grid.Column="0" Background="#0D0D0D" BorderBrush="#222222" BorderThickness="0,0,1,0">
+                    <StackPanel Margin="0,80,0,0">
                         <RadioButton x:Name="DashboardTab" Style="{StaticResource NavButtonStyle}" IsChecked="True" Content="🎮" Tag="Dashboard" Click="Tab_Click" />
                         <RadioButton x:Name="GalleryTab" Style="{StaticResource NavButtonStyle}" Content="🖼️" Tag="Gallery" Click="Tab_Click" />
                         <RadioButton x:Name="SettingsTab" Style="{StaticResource NavButtonStyle}" Content="⚙️" Tag="Settings" Click="Tab_Click" />
@@ -39,21 +44,21 @@
                     </Grid.RowDefinitions>
 
                     <!-- Header -->
-                    <Grid Grid.Row="0" Margin="25,35,25,15">
+                    <Grid Grid.Row="0" Margin="30,45,25,20">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="NVIDIA" Foreground="{StaticResource AccentColor}" FontSize="20" FontWeight="Black" VerticalAlignment="Center"/>
-                            <TextBlock x:Name="HeaderText" Text=" LITE" Foreground="{StaticResource TextColor}" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <TextBlock Text="NVIDIA" Foreground="{StaticResource AccentColor}" FontSize="22" FontWeight="Black" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="HeaderText" Text=" LITE" Foreground="{StaticResource TextColor}" FontSize="22" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         </StackPanel>
                         
                         <Button VerticalAlignment="Center" HorizontalAlignment="Right" 
-                                Width="32" Height="32" Foreground="#88FFFFFF" Background="Transparent" BorderThickness="0" 
+                                Width="35" Height="35" Foreground="#66FFFFFF" Background="Transparent" BorderThickness="0" 
                                 Click="CloseButton_Click" Cursor="Hand">
                             <Button.Style>
                                 <Style TargetType="Button">
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="Button">
-                                                <Border Background="{TemplateBinding Background}" CornerRadius="16">
+                                                <Border Background="{TemplateBinding Background}" CornerRadius="17.5">
                                                     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Border>
                                             </ControlTemplate>
@@ -61,17 +66,17 @@
                                     </Setter>
                                     <Style.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#22FFFFFF"/>
+                                            <Setter Property="Background" Value="#1AFFFFFF"/>
                                             <Setter Property="Foreground" Value="White"/>
                                         </Trigger>
                                     </Style.Triggers>
                                 </Style>
                             </Button.Style>
-                            <TextBlock Text="&#x2715;" FontSize="16"/>
+                            <TextBlock Text="&#x2715;" FontSize="18"/>
                         </Button>
                     </Grid>
                     
-                    <Separator Grid.Row="0" VerticalAlignment="Bottom" Background="#22FFFFFF" Margin="25,0" Height="1"/>
+                    <Separator Grid.Row="0" VerticalAlignment="Bottom" Background="#1AFFFFFF" Margin="30,0,25,0" Height="1"/>
 
                     <!-- Content Views -->
                     <Grid Grid.Row="1">
@@ -82,32 +87,42 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             
-                            <ListBox Grid.Row="0" x:Name="GameListBox"
-                                     Background="Transparent"
-                                     BorderThickness="0"
-                                     Margin="15"
-                                     Padding="0,0,5,0"
-                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                     SelectionChanged="GameListBox_SelectionChanged"
-                                     ItemContainerStyle="{StaticResource GameItemStyle}"
-                                     ItemTemplate="{StaticResource GameItemTemplate}">
-                                <ListBox.Resources>
-                                    <Style TargetType="ScrollBar">
-                                        <Setter Property="Width" Value="6"/>
-                                        <Setter Property="Background" Value="Transparent"/>
-                                    </Style>
-                                </ListBox.Resources>
-                            </ListBox>
+                            <Grid Grid.Row="0" Margin="20">
+                                <ListBox x:Name="GameListBox"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         Padding="0,0,5,0"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                         SelectionChanged="GameListBox_SelectionChanged"
+                                         ItemContainerStyle="{StaticResource GameItemStyle}"
+                                         ItemTemplate="{StaticResource GameItemTemplate}">
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel Orientation="Horizontal" />
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
+                                    <ListBox.Resources>
+                                        <Style TargetType="ScrollBar">
+                                            <Setter Property="Width" Value="5"/>
+                                            <Setter Property="Background" Value="Transparent"/>
+                                        </Style>
+                                    </ListBox.Resources>
+                                </ListBox>
 
-                            <Border Grid.Row="1" Background="#0A000000" Padding="25">
-                                <Button Content="SCAN FOR GAMES" 
+                                <TextBlock x:Name="NoGamesFoundText" Text="NO GAMES FOUND" 
+                                           Foreground="#444444" FontSize="14" FontWeight="Bold" 
+                                           VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed"/>
+                            </Grid>
+
+                            <Border Grid.Row="1" Background="#05FFFFFF" Padding="30">
+                                <Button Content="RE-SCAN GAMES" 
                                         x:Name="ScanButton" 
                                         Click="ScanButton_Click"
-                                        Height="50" FontSize="13" FontWeight="Bold" Cursor="Hand"
+                                        Height="55" FontSize="14" FontWeight="Bold" Cursor="Hand"
                                         Background="{StaticResource AccentColor}" Foreground="Black" BorderThickness="0">
                                     <Button.Resources>
                                         <Style TargetType="Border">
-                                            <Setter Property="CornerRadius" Value="6" />
+                                            <Setter Property="CornerRadius" Value="4" />
                                         </Style>
                                     </Button.Resources>
                                 </Button>
@@ -115,12 +130,12 @@
                         </Grid>
 
                         <!-- Gallery View -->
-                        <Grid x:Name="GalleryView" Visibility="Collapsed" Margin="25">
+                        <Grid x:Name="GalleryView" Visibility="Collapsed" Margin="30">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Text="SCREENSHOTS" Foreground="{StaticResource TextColor}" FontSize="12" FontWeight="Bold" Margin="0,0,0,20" Opacity="0.6"/>
+                            <TextBlock Grid.Row="0" Text="SCREENSHOTS" Foreground="{StaticResource TextColor}" FontSize="12" FontWeight="Bold" Margin="0,0,0,25" Opacity="0.5"/>
                             
                             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                                 <ItemsControl x:Name="GalleryItemsControl">
@@ -131,7 +146,15 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Margin="5" Width="145" Height="85" CornerRadius="6" Background="#222222" BorderBrush="#333333" BorderThickness="1" ClipToBounds="True">
+                                            <Border Margin="0,0,10,10" Width="170" Height="100" CornerRadius="4" Background="#111111" BorderBrush="#222222" BorderThickness="1" ClipToBounds="True" Cursor="Hand">
+                                                <Border.ContextMenu>
+                                                    <ContextMenu>
+                                                        <MenuItem Header="Open Image" Click="OpenImage_Click"/>
+                                                        <MenuItem Header="Save As..." Click="SaveImageAs_Click"/>
+                                                        <Separator/>
+                                                        <MenuItem Header="Delete" Click="DeleteImage_Click"/>
+                                                    </ContextMenu>
+                                                </Border.ContextMenu>
                                                 <Image Source="{Binding}" Stretch="UniformToFill" />
                                             </Border>
                                         </DataTemplate>
@@ -139,31 +162,37 @@
                                 </ItemsControl>
                             </ScrollViewer>
                             
-                            <TextBlock Grid.Row="1" Text="No screenshots found." x:Name="NoGalleryText" Visibility="Visible" Foreground="#555555" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Row="1" Text="No screenshots found." x:Name="NoGalleryText" Visibility="Visible" Foreground="#444444" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                         </Grid>
 
                         <!-- Settings View -->
                         <Grid x:Name="SettingsView" Visibility="Collapsed" Margin="30">
                             <StackPanel>
-                                <TextBlock Text="SETTINGS" Foreground="{StaticResource TextColor}" FontSize="12" FontWeight="Bold" Margin="0,0,0,25" Opacity="0.6"/>
+                                <TextBlock Text="SETTINGS" Foreground="{StaticResource TextColor}" FontSize="12" FontWeight="Bold" Margin="0,0,0,30" Opacity="0.5"/>
                                 
-                                <TextBlock Text="Global Hotkey" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,8"/>
-                                <Border Background="#1AFFFFFF" Padding="12" CornerRadius="6" Margin="0,0,0,25" BorderBrush="#22FFFFFF" BorderThickness="1">
-                                    <Grid>
-                                        <TextBlock Text="Alt + Z" Foreground="White" FontWeight="SemiBold"/>
-                                        <TextBlock Text="Default" HorizontalAlignment="Right" Foreground="#888888" FontSize="11"/>
-                                    </Grid>
-                                </Border>
+                                <TextBlock Text="Overlay Global Hotkey" Foreground="#888888" FontSize="12" Margin="0,0,0,10"/>
+                                <Grid Margin="0,0,0,30">
+                                    <Border Background="#0DFFFFFF" Padding="15" CornerRadius="4" BorderBrush="#1AFFFFFF" BorderThickness="1">
+                                        <TextBlock x:Name="OverlayHotkeyText" Text="Alt + Z" Foreground="White" FontWeight="Bold" FontSize="14"/>
+                                    </Border>
+                                    <Button Content="CHANGE" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"
+                                            Background="Transparent" Foreground="{StaticResource AccentColor}" BorderThickness="0" FontWeight="Bold" FontSize="11"
+                                            Click="ChangeOverlayHotkey_Click" Cursor="Hand"/>
+                                </Grid>
 
-                                <CheckBox Content="Enable Screenshot Gallery" Foreground="White" IsChecked="True" Margin="0,0,0,20" FontSize="13"/>
+                                <CheckBox Content="Auto-save Screen Captures" Foreground="White" IsChecked="True" Margin="0,0,0,25" FontSize="13"/>
                                 
-                                <TextBlock Text="Screenshot Hotkey" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,8"/>
-                                <Border Background="#1AFFFFFF" Padding="12" CornerRadius="6" BorderBrush="#22FFFFFF" BorderThickness="1">
-                                    <Grid>
-                                        <TextBlock Text="Win + Shift + S" Foreground="White" FontWeight="SemiBold"/>
-                                        <TextBlock Text="System" HorizontalAlignment="Right" Foreground="#888888" FontSize="11"/>
-                                    </Grid>
-                                </Border>
+                                <TextBlock Text="Screenshot Hotkey" Foreground="#888888" FontSize="12" Margin="0,0,0,10"/>
+                                <Grid>
+                                    <Border Background="#0DFFFFFF" Padding="15" CornerRadius="4" BorderBrush="#1AFFFFFF" BorderThickness="1">
+                                        <TextBlock x:Name="ScreenshotHotkeyText" Text="F10" Foreground="White" FontWeight="Bold" FontSize="14"/>
+                                    </Border>
+                                    <Button Content="CHANGE" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"
+                                            Background="Transparent" Foreground="{StaticResource AccentColor}" BorderThickness="0" FontWeight="Bold" FontSize="11"
+                                            Click="ChangeScreenshotHotkey_Click" Cursor="Hand"/>
+                                </Grid>
+
+                                <TextBlock Text="Screenshots are saved to: Pictures/Screenshots" Foreground="#555555" FontSize="10" Margin="5,15,0,0"/>
                             </StackPanel>
                         </Grid>
                     </Grid>

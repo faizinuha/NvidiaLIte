@@ -15,19 +15,17 @@ namespace NvidiaCi
 
         private readonly string[] _skipFolders = 
         { 
-            "Windows", 
-            "Common Files", 
-            "Microsoft", 
-            "WindowsApps",
-            "Reference Assemblies",
-            "MSBuild",
-            "Git",
-            "NodeJS",
-            "PowerShell",
-            "Packages",
-            "DriverStore",
-            "Temp",
-            "Uninstall Information"
+            "Windows", "Common Files", "Microsoft", "WindowsApps", "Reference Assemblies",
+            "MSBuild", "Git", "NodeJS", "PowerShell", "Packages", "DriverStore", "Temp",
+            "Uninstall Information", "System32", "SysWOW64", "AMD", "Intel", "NVIDIA Corporation",
+            "Realtek", "Bonjour", "Adobe", "Dropbox", "OneDrive", "Docker", "bin", "obj", "Autodesk", "Common"
+        };
+
+        private readonly string[] _skipFiles = 
+        {
+            "unins000", "uninstall", "helper", "crash", "setup", "update", "mDNSResponder",
+            "ddpe", "dotnet", "apphost", "singlefilehost", "xmlwf", "wish", "tcl", "python",
+            "protoc", "conhost", "cmd", "powershell", "vc_redist", "node", "npm", "git", "gpg"
         };
 
         public List<GameItem> ScanForGames(int maxResults = 100)
@@ -63,9 +61,15 @@ namespace NvidiaCi
                 var files = Directory.GetFiles(path, "*.exe");
                 foreach (var file in files)
                 {
+                    string fileName = Path.GetFileNameWithoutExtension(file);
+
+                    // Skip known system/utility files
+                    if (_skipFiles.Any(s => fileName.Contains(s, StringComparison.OrdinalIgnoreCase)))
+                        continue;
+
                     results.Add(new GameItem
                     {
-                        Name = Path.GetFileNameWithoutExtension(file),
+                        Name = fileName,
                         Path = file
                     });
 

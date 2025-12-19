@@ -5,26 +5,28 @@
     <Application.Resources>
         <!-- Color Palette -->
         <SolidColorBrush x:Key="AccentColor" Color="#FF76B900" /> <!-- NVIDIA Green -->
-        <SolidColorBrush x:Key="BackgroundColor" Color="#EE1A1A1A" />
+        <SolidColorBrush x:Key="BackgroundColor" Color="#D9121212" /> <!-- Glass effect -->
         <SolidColorBrush x:Key="SecondaryBackgroundColor" Color="#333333" />
         <SolidColorBrush x:Key="TextColor" Color="#FFFFFF" />
 
-        <!-- Game Item Template -->
+        <!-- Game Item Template (Grid Card) -->
         <DataTemplate x:Key="GameItemTemplate">
-            <Grid Margin="5">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+            <Grid Width="100" Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="100" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
                 
-                <Border Width="40" Height="40" Background="{StaticResource SecondaryBackgroundColor}" CornerRadius="5">
-                    <TextBlock Text="🎮" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20"/>
+                <Border Grid.Row="0" Background="#1AFFFFFF" CornerRadius="8" Margin="0,0,0,8">
+                    <Grid>
+                        <TextBlock Text="🎮" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="36" Opacity="0.5"/>
+                        <!-- In the future, we can add game posters here -->
+                    </Grid>
                 </Border>
                 
-                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding Name}" Foreground="{StaticResource TextColor}" FontSize="14" FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding Path}" Foreground="#AAAAAA" FontSize="10" TextTrimming="CharacterEllipsis" />
-                </StackPanel>
+                <TextBlock Grid.Row="1" Text="{Binding Name}" Foreground="{StaticResource TextColor}" 
+                           FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" TextAlignment="Center" 
+                           TextWrapping="Wrap" MaxHeight="30" />
             </Grid>
         </DataTemplate>
 

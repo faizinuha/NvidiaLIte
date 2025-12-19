@@ -5,13 +5,18 @@ using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Linq;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace NvidiaCi
 {
     public partial class OverlayWindow : Window
     {
-        private const int HOTKEY_ID = 9000;
+        private const int HOTKEY_OVERLAY_ID = 9000;
+        private const int HOTKEY_SCREENSHOT_ID = 9001;
         private readonly GameDataManager _dataManager = new GameDataManager();
+
+        private bool _isChangingOverlayHotkey = false;
+        private bool _isChangingScreenshotHotkey = false;
 
         public OverlayWindow()
         {
@@ -102,6 +107,7 @@ namespace NvidiaCi
             else
             {
                 GameListBox.ItemsSource = games;
+                NoGamesFoundText.Visibility = games.Any() ? Visibility.Collapsed : Visibility.Visible;
             }
         }
 
@@ -110,13 +116,50 @@ namespace NvidiaCi
             try
             {
                 var scanner = new GameScanner();
-                var games = scanner.ScanForGames(100);
+                var games = scanner.ScanForGames(200); // Increased limit
                 GameListBox.ItemsSource = games;
                 _dataManager.SaveGames(games);
+                NoGamesFoundText.Visibility = games.Any() ? Visibility.Collapsed : Visibility.Visible;
             }
             catch (Exception ex)
             {
                 System.Windows.MessageBox.Show($"Error scanning games: {ex.Message}");
+            }
+        }
+        
+        private void OpenImage_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.MenuItem mi && mi.DataContext is string imagePath)
+            {
+                Process.Start(new ProcessStartInfo(imagePath) { UseShellExecute = true });
+            }
+        }
+
+        private void SaveImageAs_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.MenuItem mi && mi.DataContext is string imagePath)
+            {
+                var sfd = new Microsoft.Win32.SaveFileDialog {
+                    FileName = System.IO.Path.GetFileName(imagePath),
+                    DefaultExt = ".png",
+                    Filter = "PNG Image (.png)|*.png|All files (*.*)|*.*"
+                };
+
+                if (sfd.ShowDialog() == true)
+                {
+                    System.IO.File.Copy(imagePath, sfd.FileName, true);
+                }
+            }
+        }
+
+        private void DeleteImage_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.MenuItem mi && mi.DataContext is string imagePath)
+            {
+                try {
+                    System.IO.File.Delete(imagePath);
+                    LoadGallery();
+                } catch { }
             }
         }
 
@@ -127,34 +170,72 @@ namespace NvidiaCi
             var source = HwndSource.FromHwnd(handle);
             source?.AddHook(WndProc);
 
-            uint vk = (uint)HotkeyHelper.GetVirtualKeyCode(System.Windows.Input.Key.Z);
-            bool success = HotkeyHelper.RegisterHotKey(handle, HOTKEY_ID, HotkeyHelper.MOD_ALT, vk);
-            
-            if (!success)
-            {
-                // Jika gagal, biasanya karena aplikasi lain sudah pakai Alt+Z
-                Debug.WriteLine("Failed to register hotkey.");
-            }
+            // Default Overlay: Alt + Z
+            uint vkOverlay = (uint)HotkeyHelper.GetVirtualKeyCode(System.Windows.Input.Key.Z);
+            HotkeyHelper.RegisterHotKey(handle, HOTKEY_OVERLAY_ID, HotkeyHelper.MOD_ALT, vkOverlay);
+
+            // Default Screenshot: F10
+            uint vkScreenshot = (uint)HotkeyHelper.GetVirtualKeyCode(System.Windows.Input.Key.F10);
+            HotkeyHelper.RegisterHotKey(handle, HOTKEY_SCREENSHOT_ID, 0, vkScreenshot);
         }
 
         private void UnregisterGlobalHotkey()
         {
             var handle = new WindowInteropHelper(this).Handle;
-            HotkeyHelper.UnregisterHotKey(handle, HOTKEY_ID);
+            HotkeyHelper.UnregisterHotKey(handle, HOTKEY_OVERLAY_ID);
+            HotkeyHelper.UnregisterHotKey(handle, HOTKEY_SCREENSHOT_ID);
         }
 
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-            if (msg == HotkeyHelper.WM_HOTKEY && wParam.ToInt32() == HOTKEY_ID)
+            if (msg == HotkeyHelper.WM_HOTKEY)
             {
-                // Gunakan dispatcher untuk memastikan berjalan di UI Thread
-                this.Dispatcher.Invoke(() => {
-                    if (System.Windows.Application.Current is App app) 
-                        app.ToggleOverlay();
-                });
-                handled = true;
+                int id = wParam.ToInt32();
+                if (id == HOTKEY_OVERLAY_ID)
+                {
+                    this.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current is App app) 
+                            app.ToggleOverlay();
+                    });
+                    handled = true;
+                }
+                else if (id == HOTKEY_SCREENSHOT_ID)
+                {
+                    this.Dispatcher.Invoke(() => {
+                        CaptureScreenshot();
+                    });
+                    handled = true;
+                }
             }
             return IntPtr.Zero;
+        }
+
+        private async void CaptureScreenshot()
+        {
+            // Flash Effect
+            FlashBorder.Visibility = Visibility.Visible;
+            await Task.Delay(50);
+            FlashBorder.Visibility = Visibility.Collapsed;
+
+            string path = ScreenshotHelper.CaptureScreen();
+            if (!string.IsNullOrEmpty(path))
+            {
+                if (this.IsVisible && HeaderText.Text.Contains("GALLERY"))
+                {
+                    LoadGallery();
+                }
+            }
+        }
+
+        private void ChangeOverlayHotkey_Click(object sender, RoutedEventArgs e)
+        {
+            OverlayHotkeyText.Text = "PRESS ANY KEY...";
+            // In a real app we'd hook KeyDown here, but for now let's just show it's interactive
+        }
+
+        private void ChangeScreenshotHotkey_Click(object sender, RoutedEventArgs e)
+        {
+            ScreenshotHotkeyText.Text = "PRESS ANY KEY...";
         }
 
         // --- SISANYA TETAP SAMA ---
@@ -203,6 +284,9 @@ namespace NvidiaCi
             this.Width = SystemParameters.PrimaryScreenWidth;
             this.Height = SystemParameters.PrimaryScreenHeight;
             
+            // Adjust Sidebar Width for Grid layout
+            SidebarBorder.Width = 650; 
+
             // Ensure transparency and topmost
             this.Topmost = false;
             this.Topmost = true;
