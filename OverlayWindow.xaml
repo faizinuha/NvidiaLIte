@@ -1,4 +1,4 @@
-<Window x:Class="myapp.OverlayWindow"
+<Window x:Class="NvidiaCi.OverlayWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Game Overlay"
@@ -10,7 +10,7 @@
         ResizeMode="NoResize"
         Loaded="OnLoaded">
 
-    <Border CornerRadius="10" Background="#DD222222" BorderBrush="#FF444444" BorderThickness="1" Margin="10">
+    <Border CornerRadius="0" Background="{StaticResource BackgroundColor}" BorderBrush="{StaticResource AccentColor}" BorderThickness="3,0,0,0">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -18,23 +18,78 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Text="Game Hub" FontSize="20" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,10,0,10"/>
+            <!-- Header -->
+            <Grid Grid.Row="0" Margin="20,25,20,10">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="NVIDIA" Foreground="{StaticResource AccentColor}" FontSize="18" FontWeight="Black" VerticalAlignment="Center"/>
+                    <TextBlock Text=" LITE" Foreground="{StaticResource TextColor}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
+                
+                <Button VerticalAlignment="Center" HorizontalAlignment="Right" 
+                        Width="28" Height="28" Foreground="#88FFFFFF" Background="Transparent" BorderThickness="0" 
+                        Click="CloseButton_Click" Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="14">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#22FFFFFF"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <TextBlock Text="&#x2715;" FontSize="14"/>
+                </Button>
+            </Grid>
             
-            <Button Grid.Row="0" Content="&#x2715;" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="10" 
-                    Width="30" Height="30" Foreground="White" Background="#55FF0000" BorderThickness="0" 
-                    Click="CloseButton_Click" />
-            
+            <Separator Grid.Row="0" VerticalAlignment="Bottom" Background="#11FFFFFF" Margin="20,0" Height="1"/>
+
+            <!-- Content Area -->
             <ListBox Grid.Row="1" x:Name="GameListBox"
                      Background="Transparent"
                      BorderThickness="0"
+                     Margin="10,10,10,10"
+                     Padding="0,0,5,0"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                      SelectionChanged="GameListBox_SelectionChanged"
                      ItemContainerStyle="{StaticResource GameItemStyle}"
-                     ItemTemplate="{StaticResource GameItemTemplate}"/>
+                     ItemTemplate="{StaticResource GameItemTemplate}">
+                <ListBox.Resources>
+                    <Style TargetType="ScrollBar">
+                        <Setter Property="Width" Value="8"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                    </Style>
+                </ListBox.Resources>
+            </ListBox>
             
-            <Button Grid.Row="2" Content="SCAN GAMES" 
-                    x:Name="ScanButton" 
-                    Click="ScanButton_Click"
-                    Margin="10" Padding="10,5" Background="#FF007ACC" Foreground="White" BorderThickness="0"/>
+            <!-- Footer -->
+            <Border Grid.Row="2" Background="#0A000000" Padding="20">
+                <Button Content="SCAN FOR GAMES" 
+                        x:Name="ScanButton" 
+                        Click="ScanButton_Click"
+                        Height="45"
+                        FontSize="12"
+                        FontWeight="Bold"
+                        Cursor="Hand"
+                        Background="{StaticResource AccentColor}" 
+                        Foreground="Black" 
+                        BorderThickness="0">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="4" />
+                        </Style>
+                    </Button.Resources>
+                </Button>
+            </Border>
         </Grid>
     </Border>
 </Window>

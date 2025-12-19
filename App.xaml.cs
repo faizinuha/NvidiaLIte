@@ -2,7 +2,7 @@ using System;
 using System.Windows;
 using System.Windows.Forms;
 
-namespace myapp
+namespace NvidiaCi
 {
     public partial class App : System.Windows.Application
     {
@@ -16,10 +16,30 @@ namespace myapp
             // 1. Buat instance jendela overlay tapi jangan tampilkan
             _overlayWindow = new OverlayWindow();
 
-            // 2. Setup NotifyIcon (System Tray)
+            // 2. Setup NotifyIcon (System Tray) with robust icon loading
             _notifyIcon = new NotifyIcon();
-            _notifyIcon.Icon = new System.Drawing.Icon("Assets/icon.ico"); // Pastikan file icon ada
-            _notifyIcon.Text = "Game Hub Overlay";
+            _notifyIcon.Text = "NVIDIA Lite";
+            
+            try 
+            {
+                string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "icon.ico");
+                if (System.IO.File.Exists(iconPath))
+                {
+                    _notifyIcon.Icon = new System.Drawing.Icon(iconPath);
+                }
+                else
+                {
+                    // Try relative path as fallback
+                    _notifyIcon.Icon = new System.Drawing.Icon("Assets/icon.ico");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Fallback to system icon if custom icon fails
+                System.Diagnostics.Debug.WriteLine($"Failed to load icon: {ex.Message}");
+                _notifyIcon.Icon = System.Drawing.SystemIcons.Application;
+            }
+            
             _notifyIcon.Visible = true;
 
             // 3. Tambahkan event handler untuk double-click

@@ -1,4 +1,4 @@
-namespace myapp
+namespace NvidiaCi
 {
     public class GameItem
     {

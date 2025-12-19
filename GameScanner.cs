@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace myapp
+namespace NvidiaCi
 {
     public class GameScanner
     {

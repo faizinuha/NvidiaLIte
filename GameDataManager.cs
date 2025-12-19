@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
-namespace myapp
+namespace NvidiaCi
 {
     public class GameDataManager
     {
@@ -11,9 +11,9 @@ namespace myapp
 
         public GameDataManager()
         {
-            // Menentukan path: C:\Users\<User>\AppData\Local\MyGameHub\games.json
+            // Menentukan path: C:\Users\<User>\AppData\Local\NvidiaCi\games.json
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string folderPath = Path.Combine(appDataPath, "MyGameHub");
+            string folderPath = Path.Combine(appDataPath, "NvidiaCi");
             
             // Pastikan folder sudah dibuat
             if (!Directory.Exists(folderPath))

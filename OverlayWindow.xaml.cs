@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 
-namespace myapp
+namespace NvidiaCi
 {
     public partial class OverlayWindow : Window
     {
