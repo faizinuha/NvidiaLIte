@@ -8,7 +8,8 @@
         Topmost="True"
         ShowInTaskbar="False"
         ResizeMode="NoResize"
-        Loaded="OnLoaded">
+        Loaded="OnLoaded"
+        KeyDown="OnWindowKeyDown">
 
     <Window.Resources>
         <!-- macOS-style Paper Slide Animation -->
@@ -188,15 +189,15 @@
                                                 <Border.ContextMenu>
                                                     <ContextMenu>
                                                         <MenuItem Header="Open Image" Click="OpenImage_Click" 
-                                                                  Tag="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                                  Tag="{Binding Path, RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.DataContext.Path}"/>
                                                         <MenuItem Header="Save As..." Click="SaveImageAs_Click"
-                                                                  Tag="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                                  Tag="{Binding Path, RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.DataContext.Path}"/>
                                                         <Separator/>
                                                         <MenuItem Header="Delete" Click="DeleteImage_Click"
-                                                                  Tag="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                                  Tag="{Binding Path, RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.DataContext.Path}"/>
                                                     </ContextMenu>
                                                 </Border.ContextMenu>
-                                                <Image Source="{Binding}" Stretch="UniformToFill" />
+                                                <Image Source="{Binding Source}" Stretch="UniformToFill" />
                                             </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
@@ -215,34 +216,24 @@
                                     <!-- SYSTEM CONTROL -->
                                     <TextBlock Text="SYSTEM" Foreground="#FFAAAAAA" FontSize="11" FontWeight="Bold" Margin="0,0,0,15"/>
                                     
-                                    <!-- WiFi -->
+
+
+                                    <!-- Brightness -->
                                     <Grid Margin="0,0,0,20">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Border Width="40" Height="40" Background="#1DFFFFFF" CornerRadius="20" HorizontalAlignment="Left">
-                                            <TextBlock Text="📡" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18"/>
+                                            <TextBlock Text="☀️" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18"/>
                                         </Border>
                                         <StackPanel Grid.Column="1" Margin="15,0,0,0" VerticalAlignment="Center">
-                                            <TextBlock Text="Wi-Fi Connection" Foreground="White" FontSize="13" FontWeight="SemiBold"/>
-                                            <ComboBox x:Name="WifiComboBox" SelectionChanged="WifiComboBox_SelectionChanged"
-                                                      Background="Transparent" BorderThickness="0" Foreground="#CCCCCC"
-                                                      Margin="-5,0,0,0" FontSize="11" Width="200" HorizontalAlignment="Left"
-                                                      IsEditable="False">
-                                                <!-- Items loaded dynamically -->
-                                            </ComboBox>
+                                            <TextBlock Text="Screen Brightness" Foreground="White" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                            <Slider x:Name="BrightnessSlider" Minimum="0" Maximum="100" Value="100" 
+                                                    ValueChanged="BrightnessSlider_ValueChanged"
+                                                    Background="#333" Foreground="{StaticResource AccentColor}" 
+                                                    Width="250" HorizontalAlignment="Left"/>
                                         </StackPanel>
-                                        <Button Grid.Column="2" Content="MANAGE" Click="ManageWifi_Click"
-                                                Background="#1AFFFFFF" Foreground="White" FontSize="10" FontWeight="Bold"
-                                                Padding="10,5" BorderThickness="0" Cursor="Hand">
-                                            <Button.Resources>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="CornerRadius" Value="4"/>
-                                                </Style>
-                                            </Button.Resources>
-                                        </Button>
                                     </Grid>
 
                                     <!-- Volume -->
@@ -256,11 +247,51 @@
                                         </Border>
                                         <StackPanel Grid.Column="1" Margin="15,0,0,0" VerticalAlignment="Center">
                                             <TextBlock Text="System Volume" Foreground="White" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                                            <StackPanel Orientation="Horizontal">
-                                                <Button Content="-" Width="30" Height="25" Click="VolDown_Click" Background="#222" Foreground="White" BorderThickness="0"/>
-                                                <ProgressBar Value="50" Maximum="100" Height="4" Width="150" Margin="10,0" Background="#333" Foreground="{StaticResource AccentColor}" BorderThickness="0"/>
-                                                <Button Content="+" Width="30" Height="25" Click="VolUp_Click" Background="#222" Foreground="White" BorderThickness="0"/>
-                                            </StackPanel>
+                                            <Slider x:Name="VolumeSlider" Minimum="0" Maximum="100" Value="50" 
+                                                    ValueChanged="VolumeSlider_ValueChanged"
+                                                    Background="#333" Foreground="{StaticResource AccentColor}" 
+                                                    Width="250" HorizontalAlignment="Left"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- WiFi -->
+                                    <Grid Margin="0,0,0,20">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="40" Height="40" Background="#1DFFFFFF" CornerRadius="20" HorizontalAlignment="Left">
+                                            <TextBlock Text="📡" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="15,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="Wi-Fi Connection" Foreground="White" FontSize="13" FontWeight="SemiBold"/>
+                                            <ComboBox x:Name="WifiComboBox" SelectionChanged="WifiComboBox_SelectionChanged"
+                                                      Background="#111" BorderThickness="1" BorderBrush="#333" Foreground="#CCCCCC"
+                                                      Margin="0,5,0,0" FontSize="11" Width="200" HorizontalAlignment="Left"/>
+                                            <PasswordBox x:Name="WifiPasswordBox" Visibility="Collapsed" 
+                                                         Background="#111" BorderBrush="#333" Foreground="White"
+                                                         Width="200" Height="25" Margin="0,5,0,0" HorizontalAlignment="Left"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" VerticalAlignment="Bottom">
+                                            <Button x:Name="WifiConnectBtn" Content="CONNECT" Click="ConnectWifi_Click"
+                                                    Visibility="Collapsed" Background="{StaticResource AccentColor}" Foreground="Black" 
+                                                    FontSize="10" FontWeight="Bold" Padding="10,5" BorderThickness="0" Cursor="Hand" Margin="0,0,0,5">
+                                                <Button.Resources>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="CornerRadius" Value="4"/>
+                                                    </Style>
+                                                </Button.Resources>
+                                            </Button>
+                                            <Button Content="MANAGE" Click="ManageWifi_Click"
+                                                    Background="#1AFFFFFF" Foreground="White" FontSize="10" FontWeight="Bold"
+                                                    Padding="10,5" BorderThickness="0" Cursor="Hand">
+                                                <Button.Resources>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="CornerRadius" Value="4"/>
+                                                    </Style>
+                                                </Button.Resources>
+                                            </Button>
                                         </StackPanel>
                                     </Grid>
 
@@ -274,7 +305,7 @@
                                         <Border Background="#0DFFFFFF" Padding="15" CornerRadius="4" BorderBrush="#1AFFFFFF" BorderThickness="1">
                                             <TextBlock x:Name="OverlayHotkeyText" Text="Alt + Z" Foreground="White" FontWeight="Bold" FontSize="14"/>
                                         </Border>
-                                        <Button Content="CHANGE" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"
+                                        <Button x:Name="ChangeOverlayBtn" Content="CHANGE" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"
                                                 Background="Transparent" Foreground="{StaticResource AccentColor}" BorderThickness="0" FontWeight="Bold" FontSize="11"
                                                 Click="ChangeOverlayHotkey_Click" Cursor="Hand"/>
                                     </Grid>
@@ -284,7 +315,7 @@
                                         <Border Background="#0DFFFFFF" Padding="15" CornerRadius="4" BorderBrush="#1AFFFFFF" BorderThickness="1">
                                             <TextBlock x:Name="ScreenshotHotkeyText" Text="F10" Foreground="White" FontWeight="Bold" FontSize="14"/>
                                         </Border>
-                                        <Button Content="CHANGE" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"
+                                        <Button x:Name="ChangeScreenshotBtn" Content="CHANGE" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"
                                                 Background="Transparent" Foreground="{StaticResource AccentColor}" BorderThickness="0" FontWeight="Bold" FontSize="11"
                                                 Click="ChangeScreenshotHotkey_Click" Cursor="Hand"/>
                                     </Grid>

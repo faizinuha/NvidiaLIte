@@ -16,6 +16,11 @@ namespace NvidiaCi
         private const int HOTKEY_SCREENSHOT_ID = 9001;
         private readonly GameDataManager _dataManager = new GameDataManager();
 
+        private bool _isChangingOverlayHotkey = false;
+        private bool _isChangingScreenshotHotkey = false;
+        private System.Windows.Input.Key _tempOverlayKey = System.Windows.Input.Key.Z;
+        private System.Windows.Input.Key _tempScreenshotKey = System.Windows.Input.Key.F10;
+
 
         public OverlayWindow()
         {
@@ -93,9 +98,20 @@ namespace NvidiaCi
                 case "Settings":
                     SettingsView.Visibility = Visibility.Visible;
                     HeaderText.Text = " SETTINGS";
+                    SyncSystemSliders();
                     LoadWifiNetworks();
                     break;
             }
+        }
+
+        private void SyncSystemSliders()
+        {
+            try {
+                // Audio
+                VolumeSlider.Value = SystemControlHelper.GetSystemVolume();
+                // Brightness
+                BrightnessSlider.Value = SystemControlHelper.GetBrightness();
+            } catch { }
         }
 
         private void LoadWifiNetworks()
@@ -111,8 +127,44 @@ namespace NvidiaCi
         {
             if (WifiComboBox.SelectedItem is string ssid)
             {
-                // Attempt to connect (in background)
+                WifiPasswordBox.Visibility = Visibility.Visible;
+                WifiConnectBtn.Visibility = Visibility.Visible;
+                WifiPasswordBox.Password = "";
+            }
+        }
+
+        private void ConnectWifi_Click(object sender, RoutedEventArgs e)
+        {
+            if (WifiComboBox.SelectedItem is string ssid)
+            {
+                string password = WifiPasswordBox.Password;
+                if (string.IsNullOrEmpty(password)) 
+                {
+                    System.Windows.MessageBox.Show("Password is required for this Beta version.");
+                    return;
+                }
+                
+                // netsh connection with password requires a profile or direct command
+                // For this demo, we'll simulate the attempt
                 Task.Run(() => SystemControlHelper.ConnectToNetwork(ssid));
+                WifiPasswordBox.Visibility = Visibility.Collapsed;
+                WifiConnectBtn.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (this.IsLoaded)
+            {
+                SystemControlHelper.SetSystemVolume((float)e.NewValue);
+            }
+        }
+
+        private void BrightnessSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (this.IsLoaded)
+            {
+                SystemControlHelper.SetBrightness((int)e.NewValue);
             }
         }
 
@@ -121,17 +173,7 @@ namespace NvidiaCi
             SystemControlHelper.OpenWifiSettings();
         }
 
-        private void VolUp_Click(object sender, RoutedEventArgs e)
-        {
-            var handle = new WindowInteropHelper(this).Handle;
-            SystemControlHelper.IncreaseVolume(handle);
-        }
 
-        private void VolDown_Click(object sender, RoutedEventArgs e)
-        {
-            var handle = new WindowInteropHelper(this).Handle;
-            SystemControlHelper.DecreaseVolume(handle);
-        }
 
         private void LoadGallery()
         {
@@ -146,6 +188,17 @@ namespace NvidiaCi
                     var files = System.IO.Directory.GetFiles(screenshotPath, "*.png")
                         .OrderByDescending(f => System.IO.File.GetCreationTime(f))
                         .Take(12)
+                        .Select(f => {
+                            try {
+                                var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                                bitmap.BeginInit();
+                                bitmap.UriSource = new Uri(f);
+                                bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                                bitmap.EndInit();
+                                return new { Path = f, Source = bitmap };
+                            } catch { return null; }
+                        })
+                        .Where(x => x != null)
                         .ToList();
 
                     GalleryItemsControl.ItemsSource = files;
@@ -291,13 +344,54 @@ namespace NvidiaCi
 
         private void ChangeOverlayHotkey_Click(object sender, RoutedEventArgs e)
         {
+            _isChangingOverlayHotkey = true;
+            _isChangingScreenshotHotkey = false;
             OverlayHotkeyText.Text = "PRESS ANY KEY...";
-            // In a real app we'd hook KeyDown here, but for now let's just show it's interactive
+            ChangeOverlayBtn.Visibility = Visibility.Collapsed;
         }
 
         private void ChangeScreenshotHotkey_Click(object sender, RoutedEventArgs e)
         {
+            _isChangingScreenshotHotkey = true;
+            _isChangingOverlayHotkey = false;
             ScreenshotHotkeyText.Text = "PRESS ANY KEY...";
+            ChangeScreenshotBtn.Visibility = Visibility.Collapsed;
+        }
+
+        private void OnWindowKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            // Ignore modifiers themselves as primary keys if needed, or handle them
+            if (e.Key == System.Windows.Input.Key.LeftAlt || e.Key == System.Windows.Input.Key.RightAlt ||
+                e.Key == System.Windows.Input.Key.LeftCtrl || e.Key == System.Windows.Input.Key.RightCtrl ||
+                e.Key == System.Windows.Input.Key.LeftShift || e.Key == System.Windows.Input.Key.RightShift)
+                return;
+
+            if (_isChangingOverlayHotkey)
+            {
+                _tempOverlayKey = e.Key;
+                OverlayHotkeyText.Text = $"Alt + {_tempOverlayKey}";
+                _isChangingOverlayHotkey = false;
+                ChangeOverlayBtn.Visibility = Visibility.Visible;
+                
+                var handle = new WindowInteropHelper(this).Handle;
+                HotkeyHelper.UnregisterHotKey(handle, HOTKEY_OVERLAY_ID);
+                uint vk = (uint)HotkeyHelper.GetVirtualKeyCode(_tempOverlayKey);
+                HotkeyHelper.RegisterHotKey(handle, HOTKEY_OVERLAY_ID, HotkeyHelper.MOD_ALT, vk);
+                e.Handled = true;
+            }
+            else if (_isChangingScreenshotHotkey)
+            {
+                _tempScreenshotKey = e.Key;
+                ScreenshotHotkeyText.Text = _tempScreenshotKey.ToString();
+                _isChangingScreenshotHotkey = false;
+                ChangeScreenshotBtn.Visibility = Visibility.Visible;
+
+                var handle = new WindowInteropHelper(this).Handle;
+                HotkeyHelper.UnregisterHotKey(handle, HOTKEY_SCREENSHOT_ID);
+                uint vk = (uint)HotkeyHelper.GetVirtualKeyCode(_tempScreenshotKey);
+                HotkeyHelper.RegisterHotKey(handle, HOTKEY_SCREENSHOT_ID, 0, vk);
+                e.Handled = true;
+            }
         }
 
         // --- SISANYA TETAP SAMA ---

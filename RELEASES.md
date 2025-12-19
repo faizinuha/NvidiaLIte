@@ -2,6 +2,16 @@
 
 Semua pembaruan penting untuk project NVIDIA LITE akan dicatat di sini.
 
+## [v1.4.] - 2025-12-19
+
+### Added
+
+- **Sound & WiFi "Complex"**: Slider volume audio real-time (NAudio), input password WiFi, dan tombol Manage.
+- **Brightness Control**: Slider pengaturan cahaya layar menggunakan WMI.
+- **Real-time Hotkeys**: Sistem ganti shortcut yang langsung aktif tanpa perlu restart.
+- **Gallery Fix**: Perbaikan bug penghapusan gambar menggunakan `CacheOption.OnLoad`.
+- **Strict Game Scanner**: Filter file sistem (<1MB) dan prioritas folder Steam/Epic.
+
 ## [v1.2.0] - 2025-12-19
 
 ### Added

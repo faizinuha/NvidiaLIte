@@ -1,39 +1,72 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
+using System.Management;
+using NAudio.CoreAudioApi;
 
 namespace NvidiaCi
 {
     public static class SystemControlHelper
     {
-        // --- VOLUME CONTROL (SIMPLE) ---
-        private const int APPCOMMAND_VOLUME_MUTE = 0x80000;
-        private const int APPCOMMAND_VOLUME_DOWN = 0x90000;
-        private const int APPCOMMAND_VOLUME_UP = 0xA0000;
-        private const int WM_APPCOMMAND = 0x319;
-
-        [DllImport("user32.dll")]
-        public static extern IntPtr SendMessageW(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
-
-        public static void IncreaseVolume(IntPtr handle)
+        // --- VOLUME CONTROL (Precise with NAudio) ---
+        public static float GetSystemVolume()
         {
-            SendMessageW(handle, WM_APPCOMMAND, handle, (IntPtr)APPCOMMAND_VOLUME_UP);
+            try
+            {
+                var enumerator = new MMDeviceEnumerator();
+                var device = enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+                return device.AudioEndpointVolume.MasterVolumeLevelScalar * 100;
+            }
+            catch { return 50; }
         }
 
-        public static void DecreaseVolume(IntPtr handle)
+        public static void SetSystemVolume(float level)
         {
-            SendMessageW(handle, WM_APPCOMMAND, handle, (IntPtr)APPCOMMAND_VOLUME_DOWN);
+            try
+            {
+                var enumerator = new MMDeviceEnumerator();
+                var device = enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+                device.AudioEndpointVolume.MasterVolumeLevelScalar = level / 100f;
+            }
+            catch { }
         }
 
-        public static void ToggleMute(IntPtr handle)
+        // --- BRIGHTNESS CONTROL (Via WMI) ---
+        public static int GetBrightness()
         {
-            SendMessageW(handle, WM_APPCOMMAND, handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
+            try
+            {
+                using (var searcher = new ManagementObjectSearcher("root\\WMI", "SELECT * FROM WmiMonitorBrightness"))
+                using (var results = searcher.Get())
+                {
+                    foreach (ManagementObject obj in results)
+                    {
+                        return (byte)obj.GetPropertyValue("CurrentBrightness");
+                    }
+                }
+            }
+            catch { }
+            return 100; // Default or desktop fallback
         }
 
-        // --- WIFI CONTROL (Via netsh) ---
+        public static void SetBrightness(int level)
+        {
+            try
+            {
+                using (var searcher = new ManagementObjectSearcher("root\\WMI", "SELECT * FROM WmiMonitorBrightnessMethods"))
+                using (var results = searcher.Get())
+                {
+                    foreach (ManagementObject obj in results)
+                    {
+                        obj.InvokeMethod("WmiSetBrightness", new object[] { uint.MaxValue, (byte)level });
+                        break;
+                    }
+                }
+            }
+            catch { }
+        }
 
+        // --- WIFI CONTROL (Keep existing) ---
         public static List<string> GetAvailableNetworks()
         {
             var networks = new List<string>();
@@ -52,8 +85,6 @@ namespace NvidiaCi
                     string output = process.StandardOutput.ReadToEnd();
                     process.WaitForExit();
 
-                    // Parse SSID line by line
-                    // Output format: "SSID 1 : NetworkName"
                     var lines = output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                     foreach (var line in lines)
                     {
@@ -80,7 +111,6 @@ namespace NvidiaCi
         {
             try
             {
-                // Connect to a profile that matches the SSID name
                 var psi = new ProcessStartInfo("netsh", $"wlan connect name=\"{ssid}\"")
                 {
                     UseShellExecute = true,
