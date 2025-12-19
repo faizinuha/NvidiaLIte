@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "3FOkXRkLjMo=",
+  "dgSpecHash": "/0CmVJLd2/Q=",
   "success": true,
-  "projectFilePath": "/build/myapp/myapp.csproj",
+  "projectFilePath": "/home/user/nvidialite/myapp.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }
