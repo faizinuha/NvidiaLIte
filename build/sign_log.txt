@@ -1,0 +1,7 @@
+[Fri 12/19/2025 19:30:26.84] Signing: "C:\Aplikasi Win\NvidiaLIte\build\Output\NvidiaLite_Setup_v1.4.exe" 
+Unable to load provider: legacy
+Warning: Legacy mode disabled
+Connecting to http://timestamp.digicert.com
+Succeeded
+        1 file(s) moved.
+Successfully signed and moved. 

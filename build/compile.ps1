@@ -1,71 +1,166 @@
-# PowerShell Script to build and compile NVIDIA LITE Installer
+# ==============================================================================
+# NVIDIA LITE Build & Installer Automation Script
+# Clean, Professional, Maintainable
+# ==============================================================================
 
-Write-Host "--- 0. Stopping any running application instances ---" -ForegroundColor Cyan
+$ErrorActionPreference = "Stop"
+
+# ------------------------------------------------------------------------------
+# CONFIG
+# ------------------------------------------------------------------------------
+$BuildDir         = $PSScriptRoot
+$ProjectRoot      = (Get-Item "$BuildDir\..").FullName
+$Csproj           = "$ProjectRoot\NvidiaCi.csproj"
+$IssScript        = "$BuildDir\compile.iss"
+$InnoSetup        = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+
+$AppName          = "NvidiaLite"
+$Version          = "1.4"
+
+$InstallerName    = "NvidiaLite_Setup_v$Version.exe"
+$InstallerPath    = "$BuildDir\Output\$InstallerName"
+$SignedInstaller  = "$BuildDir\Output\$AppName-Setup-v$Version-signed.exe"
+
+# Signing
+$SignTool         = "$BuildDir\bin\osslsigncode.exe"
+$CertFile         = "$BuildDir\ZeroMixCert.pfx"
+$CertPassword     = "ZeroMixPass"
+$TimestampServer  = "http://timestamp.digicert.com"
+
+# Helper Batch for Inno Setup
+$SignBat          = "$BuildDir\sign.bat"
+
+# ------------------------------------------------------------------------------
+# HELPER FUNCTIONS
+# ------------------------------------------------------------------------------
+function Info($msg)  { Write-Host $msg -ForegroundColor Cyan }
+function Ok($msg)    { Write-Host "✅ $msg" -ForegroundColor Green }
+function Warn($msg)  { Write-Host "⚠️  $msg" -ForegroundColor Yellow }
+function Fail($msg)  { Write-Host "❌ $msg" -ForegroundColor Red; exit 1 }
+
+# Trick to get Short Path (8.3) to avoid space issues in ISCC
+function Get-ShortPath($path) {
+    try {
+        $fso = New-Object -ComObject Scripting.FileSystemObject
+        if (Test-Path -Path $path -PathType Container) {
+            return $fso.GetFolder($path).ShortPath
+        } else {
+            return $fso.GetFile($path).ShortPath
+        }
+    } catch {
+        return $path # Fallback to original if fails
+    }
+}
+
+# ------------------------------------------------------------------------------
+# START
+# ------------------------------------------------------------------------------
+Info "`n=== NVIDIA LITE Build Script ==="
+
+# 0. Stop instance
+Info "`n[0/4] Stopping any running application instances..."
 Stop-Process -Name "NvidiaCi" -Force -ErrorAction SilentlyContinue
 
+# ------------------------------------------------------------------------------
+# STEP 1: Publish App
+# ------------------------------------------------------------------------------
+Info "`n[1/4] Publishing application..."
 
-$ProjectRoot = Resolve-Path "$PSScriptRoot\.."
-$BuildDir = "$ProjectRoot\bin\Release\net9.0-windows\win-x64\publish"
-$InnoSetupExe = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
-$IssScript = "$PSScriptRoot\compile.iss"
+try {
+    dotnet publish "$Csproj" `
+        -c Release `
+        -r win-x64 `
+        -p:PublishSingleFile=true `
+        -p:PublishReadyToRun=true `
+        --self-contained true
 
-# Signing Configuration
-$SignTool = "$PSScriptRoot\bin\osslsigncode.exe"
-$CertFile = "$PSScriptRoot\ZeroMixCert.pfx"
-$CertPassword = "ZeroMixPass"
-$TimestampServer = "http://timestamp.digicert.com"
-
-function Sign-File($FilePath) {
-    if (Test-Path $CertFile) {
-        Write-Host "--- Signing: $FilePath ---" -ForegroundColor Yellow
-        & $SignTool sign -pkcs12 "$CertFile" -pass "$CertPassword" -ts "$TimestampServer" -in "$FilePath" -out "$FilePath.signed"
-        if ($LASTEXITCODE -eq 0) {
-            Move-Item -Path "$FilePath.signed" -Destination "$FilePath" -Force
-            Write-Host "Successfully signed $FilePath" -ForegroundColor Green
-        } else {
-            Write-Warning "Failed to sign $FilePath. Proceeding without signature."
+    # Sign main executable
+    $MainExe = "$ProjectRoot\bin\Release\net9.0-windows\win-x64\publish\NvidiaCi.exe"
+    if (Test-Path $MainExe) {
+        Info "Signing main executable..."
+        & "$SignTool" sign -pkcs12 "$CertFile" -pass "$CertPassword" -ts "$TimestampServer" -in "$MainExe" -out "$MainExe.signed"
+        if (Test-Path "$MainExe.signed") {
+            Move-Item -Path "$MainExe.signed" -Destination "$MainExe" -Force
+            Ok "Executable berhasil ditandatangani"
         }
-    } else {
-        Write-Warning "Certificate $CertFile not found. Skipping signing."
     }
+    
+    Ok "Publish aplikasi berhasil"
+}
+catch {
+    Fail "Publish aplikasi gagal: $_"
 }
 
-Write-Host "--- 1. Cleaning old builds ---" -ForegroundColor Cyan
-if (Test-Path $BuildDir) { Remove-Item -Recurse -Force $BuildDir }
+# ------------------------------------------------------------------------------
+# STEP 2: Compile Installer
+# ------------------------------------------------------------------------------
+Info "`n[2/4] Compiling installer with Inno Setup..."
 
-Write-Host "--- 2. Publishing .NET Project (Self-Contained) ---" -ForegroundColor Cyan
-Set-Location $ProjectRoot
-dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:PublishReadyToRun=true
+if (-not (Test-Path $InnoSetup)) { Fail "Inno Setup tidak ditemukan" }
+
+# GET SHORT PATH TO AVOID SPACES!
+$ShortSignBat = Get-ShortPath $SignBat
+Info "Using short path for SignTool: $ShortSignBat"
+
+# Sekarang kita kirim Short Path yang bersih dari spasi
+$InnoArgs = @(
+    "/Sstandard=$ShortSignBat `$f",
+    "compile.iss"
+)
+
+Push-Location "$BuildDir"
+& "$InnoSetup" $InnoArgs
+$exitCode = $LASTEXITCODE
+Pop-Location
+
+if ($exitCode -ne 0) {
+    Fail "Kompilasi installer gagal (Exit code: $exitCode)"
+}
+
+Ok "Installer berhasil dikompilasi"
+
+# ------------------------------------------------------------------------------
+# STEP 3: Code Signing
+# ------------------------------------------------------------------------------
+Info "`n[3/4] Signing installer package..."
+
+$Files = Get-ChildItem "$BuildDir\Output\*.exe"
+if ($Files.Count -eq 0) { Fail "Data installer tidak ditemukan di Output" }
+$ActualInstaller = $Files[0].FullName
+
+& "$SignTool" sign `
+    -pkcs12 "$CertFile" `
+    -pass "$CertPassword" `
+    -ts "$TimestampServer" `
+    -in  "$ActualInstaller" `
+    -out "$SignedInstaller"
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "Dotnet publish failed!"
-    exit $LASTEXITCODE
+    Fail "Penandatanganan installer gagal"
 }
 
-# Sign the main executable
-$MainExe = "$BuildDir\NvidiaCi.exe"
-if (Test-Path $MainExe) {
-    Sign-File $MainExe
-} else {
-    Write-Warning "Main executable not found at $MainExe"
-}
+# Final Move
+$FinalFileName = Split-Path $ActualInstaller -Leaf
+Remove-Item "$ActualInstaller" -Force
+Move-Item "$SignedInstaller" "$BuildDir\Output\$FinalFileName" -Force
 
-Write-Host "--- 3. Compiling Installer with Inno Setup (Signing Enabled) ---" -ForegroundColor Cyan
-if (Test-Path $InnoSetupExe) {
-    # Define the SignTool command for Inno Setup
-    # $f is replaced by Inno Setup with the file path to sign
-    $SignCmd = "cmd /c `"`"$SignTool`" sign -pkcs12 `"$CertFile`" -pass $CertPassword -ts $TimestampServer -in `$f -out `$f.signed && move /Y `$f.signed `$f`""
-    
-    & $InnoSetupExe /S"standard=$SignCmd" "$IssScript"
-    
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "Successfully compiled and signed the installer." -ForegroundColor Green
-    } else {
-        Write-Error "Inno Setup compilation failed!"
-    }
-} else {
-    Write-Error "Inno Setup Compiler (ISCC.exe) not found at $InnoSetupExe"
-    Write-Host "Please install Inno Setup 6 or adjust the path in this script." -ForegroundColor Yellow
-}
+Ok "Installer berhasil ditandatangani"
 
-Write-Host "--- DONE! Check build\Output folder ---" -ForegroundColor Green
+# ------------------------------------------------------------------------------
+# STEP 4: Verify Output
+# ------------------------------------------------------------------------------
+Info "`n[4/4] Verifying output..."
+
+$FinalFile = "$BuildDir\Output\$FinalFileName"
+$SizeMB = [Math]::Round((Get-Item "$FinalFile").Length / 1MB, 2)
+
+Ok "Build selesai!"
+Info "📦 File  : $FinalFile"
+Info "📊 Ukuran: $SizeMB MB"
+
+# ------------------------------------------------------------------------------
+# DONE
+# ------------------------------------------------------------------------------
+Info "`n=== BUILD COMPLETE ==="
+Write-Host "🎉 NVIDIA LITE siap didistribusikan!" -ForegroundColor Green
+Write-Host ""

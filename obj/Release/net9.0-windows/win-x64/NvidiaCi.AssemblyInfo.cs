@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NvidiaCi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+87999675ef7ff3189abb58a09ba0fe2f543e9557")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f1a2bc05436d6896760f241b88f7b6790b7e2046")]
 [assembly: System.Reflection.AssemblyProductAttribute("NvidiaCi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NvidiaCi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
