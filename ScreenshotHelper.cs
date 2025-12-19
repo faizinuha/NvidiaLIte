@@ -21,7 +21,10 @@ namespace NvidiaCi
                 string fileName = $"Screenshot_{DateTime.Now:yyyyMMdd_HHmmss}.png";
                 string fullPath = Path.Combine(screenshotFolder, fileName);
 
-                Rectangle bounds = Screen.PrimaryScreen.Bounds;
+                var primaryScreen = Screen.PrimaryScreen;
+                if (primaryScreen == null) return string.Empty;
+
+                Rectangle bounds = primaryScreen.Bounds;
                 using (Bitmap bitmap = new Bitmap(bounds.Width, bounds.Height))
                 {
                     using (Graphics g = Graphics.FromImage(bitmap))
@@ -36,7 +39,7 @@ namespace NvidiaCi
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Failed to capture screenshot: {ex.Message}");
-                return null;
+                return string.Empty;
             }
         }
     }

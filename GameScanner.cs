@@ -10,22 +10,24 @@ namespace NvidiaCi
         private readonly string[] _targetFolders = 
         { 
             @"C:\Program Files", 
-            @"C:\Program Files (x86)" 
+            @"C:\Program Files (x86)",
+            @"C:\Program Files\Steam\steamapps\common"
         };
-
         private readonly string[] _skipFolders = 
         { 
             "Windows", "Common Files", "Microsoft", "WindowsApps", "Reference Assemblies",
             "MSBuild", "Git", "NodeJS", "PowerShell", "Packages", "DriverStore", "Temp",
             "Uninstall Information", "System32", "SysWOW64", "AMD", "Intel", "NVIDIA Corporation",
-            "Realtek", "Bonjour", "Adobe", "Dropbox", "OneDrive", "Docker", "bin", "obj", "Autodesk", "Common"
+            "Realtek", "Bonjour", "Adobe", "Dropbox", "OneDrive", "Docker", "bin", "obj", "Autodesk", "Common",
+            "DirectX", "Vulkan"
         };
 
         private readonly string[] _skipFiles = 
         {
             "unins000", "uninstall", "helper", "crash", "setup", "update", "mDNSResponder",
             "ddpe", "dotnet", "apphost", "singlefilehost", "xmlwf", "wish", "tcl", "python",
-            "protoc", "conhost", "cmd", "powershell", "vc_redist", "node", "npm", "git", "gpg"
+            "protoc", "conhost", "cmd", "powershell", "vc_redist", "node", "npm", "git", "gpg",
+            "DXSETUP", "vcredist", "UnityCrashHandler", "BsSndRpt"
         };
 
         public List<GameItem> ScanForGames(int maxResults = 100)

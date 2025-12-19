@@ -10,8 +10,43 @@
         ResizeMode="NoResize"
         Loaded="OnLoaded">
 
+    <Window.Resources>
+        <!-- macOS-style Paper Slide Animation -->
+        <Storyboard x:Key="ShowSidebar">
+            <DoubleAnimation Storyboard.TargetName="SidebarBorder" 
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                             From="-650" To="0" Duration="0:0:0.4">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/> 
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="MainRootGrid" 
+                             Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" Duration="0:0:0.3"/>
+        </Storyboard>
+        
+        <Storyboard x:Key="HideSidebar">
+            <DoubleAnimation Storyboard.TargetName="SidebarBorder" 
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                             To="-650" Duration="0:0:0.3">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseIn"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="MainRootGrid" 
+                             Storyboard.TargetProperty="Opacity"
+                             To="0" Duration="0:0:0.3"/>
+        </Storyboard>
+    </Window.Resources>
+
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+            <BeginStoryboard Storyboard="{StaticResource ShowSidebar}"/>
+        </EventTrigger>
+    </Window.Triggers>
+
     <!-- Main Root Grid -->
-    <Grid>
+    <Grid x:Name="MainRootGrid">
         <!-- Full Screen Semi-Transparent Background (Glass effect like Game Bar) -->
         <Grid Background="#22000000" MouseLeftButtonDown="Background_MouseLeftButtonDown" />
 
@@ -19,8 +54,11 @@
         <Border x:Name="FlashBorder" Background="White" Visibility="Collapsed" IsHitTestVisible="False" Opacity="0.5"/>
         
         <!-- Sidebar Container (Left Side) -->
-        <Border x:Name="SidebarBorder" HorizontalAlignment="Left" Width="450" Background="{StaticResource BackgroundColor}" 
+        <Border x:Name="SidebarBorder" HorizontalAlignment="Left" Width="650" Background="{StaticResource BackgroundColor}" 
                 BorderBrush="{StaticResource AccentColor}" BorderThickness="0,0,2,0">
+            <Border.RenderTransform>
+                <TranslateTransform X="-650"/>
+            </Border.RenderTransform>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="75" /> <!-- Navbar column -->
@@ -149,10 +187,13 @@
                                             <Border Margin="0,0,10,10" Width="170" Height="100" CornerRadius="4" Background="#111111" BorderBrush="#222222" BorderThickness="1" ClipToBounds="True" Cursor="Hand">
                                                 <Border.ContextMenu>
                                                     <ContextMenu>
-                                                        <MenuItem Header="Open Image" Click="OpenImage_Click"/>
-                                                        <MenuItem Header="Save As..." Click="SaveImageAs_Click"/>
+                                                        <MenuItem Header="Open Image" Click="OpenImage_Click" 
+                                                                  Tag="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                        <MenuItem Header="Save As..." Click="SaveImageAs_Click"
+                                                                  Tag="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                                         <Separator/>
-                                                        <MenuItem Header="Delete" Click="DeleteImage_Click"/>
+                                                        <MenuItem Header="Delete" Click="DeleteImage_Click"
+                                                                  Tag="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                                     </ContextMenu>
                                                 </Border.ContextMenu>
                                                 <Image Source="{Binding}" Stretch="UniformToFill" />
@@ -167,33 +208,91 @@
 
                         <!-- Settings View -->
                         <Grid x:Name="SettingsView" Visibility="Collapsed" Margin="30">
-                            <StackPanel>
-                                <TextBlock Text="SETTINGS" Foreground="{StaticResource TextColor}" FontSize="12" FontWeight="Bold" Margin="0,0,0,30" Opacity="0.5"/>
-                                
-                                <TextBlock Text="Overlay Global Hotkey" Foreground="#888888" FontSize="12" Margin="0,0,0,10"/>
-                                <Grid Margin="0,0,0,30">
-                                    <Border Background="#0DFFFFFF" Padding="15" CornerRadius="4" BorderBrush="#1AFFFFFF" BorderThickness="1">
-                                        <TextBlock x:Name="OverlayHotkeyText" Text="Alt + Z" Foreground="White" FontWeight="Bold" FontSize="14"/>
-                                    </Border>
-                                    <Button Content="CHANGE" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"
-                                            Background="Transparent" Foreground="{StaticResource AccentColor}" BorderThickness="0" FontWeight="Bold" FontSize="11"
-                                            Click="ChangeOverlayHotkey_Click" Cursor="Hand"/>
-                                </Grid>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel>
+                                    <TextBlock Text="SETTINGS" Foreground="{StaticResource TextColor}" FontSize="12" FontWeight="Bold" Margin="0,0,0,25" Opacity="0.5"/>
+                                    
+                                    <!-- SYSTEM CONTROL -->
+                                    <TextBlock Text="SYSTEM" Foreground="#FFAAAAAA" FontSize="11" FontWeight="Bold" Margin="0,0,0,15"/>
+                                    
+                                    <!-- WiFi -->
+                                    <Grid Margin="0,0,0,20">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="40" Height="40" Background="#1DFFFFFF" CornerRadius="20" HorizontalAlignment="Left">
+                                            <TextBlock Text="📡" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="15,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="Wi-Fi Connection" Foreground="White" FontSize="13" FontWeight="SemiBold"/>
+                                            <ComboBox x:Name="WifiComboBox" SelectionChanged="WifiComboBox_SelectionChanged"
+                                                      Background="Transparent" BorderThickness="0" Foreground="#CCCCCC"
+                                                      Margin="-5,0,0,0" FontSize="11" Width="200" HorizontalAlignment="Left"
+                                                      IsEditable="False">
+                                                <!-- Items loaded dynamically -->
+                                            </ComboBox>
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Content="MANAGE" Click="ManageWifi_Click"
+                                                Background="#1AFFFFFF" Foreground="White" FontSize="10" FontWeight="Bold"
+                                                Padding="10,5" BorderThickness="0" Cursor="Hand">
+                                            <Button.Resources>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="CornerRadius" Value="4"/>
+                                                </Style>
+                                            </Button.Resources>
+                                        </Button>
+                                    </Grid>
 
-                                <CheckBox Content="Auto-save Screen Captures" Foreground="White" IsChecked="True" Margin="0,0,0,25" FontSize="13"/>
-                                
-                                <TextBlock Text="Screenshot Hotkey" Foreground="#888888" FontSize="12" Margin="0,0,0,10"/>
-                                <Grid>
-                                    <Border Background="#0DFFFFFF" Padding="15" CornerRadius="4" BorderBrush="#1AFFFFFF" BorderThickness="1">
-                                        <TextBlock x:Name="ScreenshotHotkeyText" Text="F10" Foreground="White" FontWeight="Bold" FontSize="14"/>
-                                    </Border>
-                                    <Button Content="CHANGE" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"
-                                            Background="Transparent" Foreground="{StaticResource AccentColor}" BorderThickness="0" FontWeight="Bold" FontSize="11"
-                                            Click="ChangeScreenshotHotkey_Click" Cursor="Hand"/>
-                                </Grid>
+                                    <!-- Volume -->
+                                    <Grid Margin="0,0,0,30">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="40" Height="40" Background="#1DFFFFFF" CornerRadius="20" HorizontalAlignment="Left">
+                                            <TextBlock Text="🔊" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="15,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="System Volume" Foreground="White" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Content="-" Width="30" Height="25" Click="VolDown_Click" Background="#222" Foreground="White" BorderThickness="0"/>
+                                                <ProgressBar Value="50" Maximum="100" Height="4" Width="150" Margin="10,0" Background="#333" Foreground="{StaticResource AccentColor}" BorderThickness="0"/>
+                                                <Button Content="+" Width="30" Height="25" Click="VolUp_Click" Background="#222" Foreground="White" BorderThickness="0"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Grid>
 
-                                <TextBlock Text="Screenshots are saved to: Pictures/Screenshots" Foreground="#555555" FontSize="10" Margin="5,15,0,0"/>
-                            </StackPanel>
+                                    <Separator Background="#1AFFFFFF" Height="1" Margin="0,0,0,25"/>
+
+                                    <!-- HOTKEYS -->
+                                    <TextBlock Text="SHORTCUTS" Foreground="#FFAAAAAA" FontSize="11" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                                    <TextBlock Text="Overlay Global Hotkey" Foreground="#888888" FontSize="12" Margin="0,0,0,10"/>
+                                    <Grid Margin="0,0,0,20">
+                                        <Border Background="#0DFFFFFF" Padding="15" CornerRadius="4" BorderBrush="#1AFFFFFF" BorderThickness="1">
+                                            <TextBlock x:Name="OverlayHotkeyText" Text="Alt + Z" Foreground="White" FontWeight="Bold" FontSize="14"/>
+                                        </Border>
+                                        <Button Content="CHANGE" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"
+                                                Background="Transparent" Foreground="{StaticResource AccentColor}" BorderThickness="0" FontWeight="Bold" FontSize="11"
+                                                Click="ChangeOverlayHotkey_Click" Cursor="Hand"/>
+                                    </Grid>
+                                    
+                                    <TextBlock Text="Screenshot Hotkey" Foreground="#888888" FontSize="12" Margin="0,0,0,10"/>
+                                    <Grid Margin="0,0,0,30">
+                                        <Border Background="#0DFFFFFF" Padding="15" CornerRadius="4" BorderBrush="#1AFFFFFF" BorderThickness="1">
+                                            <TextBlock x:Name="ScreenshotHotkeyText" Text="F10" Foreground="White" FontWeight="Bold" FontSize="14"/>
+                                        </Border>
+                                        <Button Content="CHANGE" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"
+                                                Background="Transparent" Foreground="{StaticResource AccentColor}" BorderThickness="0" FontWeight="Bold" FontSize="11"
+                                                Click="ChangeScreenshotHotkey_Click" Cursor="Hand"/>
+                                    </Grid>
+
+                                    <TextBlock Text="Screenshots are saved to: Pictures/Screenshots" Foreground="#555555" FontSize="10" Margin="5,0,0,0"/>
+                                    <CheckBox Content="Auto-save Screen Captures" Foreground="White" IsChecked="True" Margin="0,15,0,0" FontSize="13"/>
+                                </StackPanel>
+                            </ScrollViewer>
                         </Grid>
                     </Grid>
                 </Grid>

@@ -6,6 +6,7 @@ using System.Windows.Interop;
 using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
+using System.Windows.Media.Animation;
 
 namespace NvidiaCi
 {
@@ -15,22 +16,47 @@ namespace NvidiaCi
         private const int HOTKEY_SCREENSHOT_ID = 9001;
         private readonly GameDataManager _dataManager = new GameDataManager();
 
-        private bool _isChangingOverlayHotkey = false;
-        private bool _isChangingScreenshotHotkey = false;
 
         public OverlayWindow()
         {
             InitializeComponent();
             
-            // PENTING: Paksa pembuatan Handle agar WinAPI bisa mendaftarkan hotkey 
-            // meskipun jendela belum ditampilkan (Show).
             var handle = new WindowInteropHelper(this).EnsureHandle();
-            
-            // Daftarkan hotkey segera setelah handle tersedia
             RegisterGlobalHotkey(handle);
 
             this.Closed += OnClosed;
             PositionWindow();
+            
+            // Start hidden but initialized
+            this.Opacity = 0;
+            this.Visibility = Visibility.Collapsed;
+        }
+
+        public Task ShowAnimated()
+        {
+            PositionWindow();
+            this.Visibility = Visibility.Visible;
+            this.Opacity = 1;
+            
+            var sb = (Storyboard)this.Resources["ShowSidebar"];
+            sb.Begin();
+            
+            this.Activate();
+            this.Topmost = false;
+            this.Topmost = true;
+            this.Focus();
+
+            return Task.CompletedTask;
+        }
+
+        public async Task HideAnimated()
+        {
+            var sb = (Storyboard)this.Resources["HideSidebar"];
+            sb.Begin();
+            
+            // Wait for animation to finish (matching duration in XAML: 0.3s)
+            await Task.Delay(350);
+            this.Visibility = Visibility.Collapsed;
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
@@ -67,8 +93,44 @@ namespace NvidiaCi
                 case "Settings":
                     SettingsView.Visibility = Visibility.Visible;
                     HeaderText.Text = " SETTINGS";
+                    LoadWifiNetworks();
                     break;
             }
+        }
+
+        private void LoadWifiNetworks()
+        {
+            try {
+                var networks = SystemControlHelper.GetAvailableNetworks();
+                WifiComboBox.ItemsSource = networks;
+                if (networks.Any()) WifiComboBox.SelectedIndex = 0;
+            } catch { }
+        }
+
+        private void WifiComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (WifiComboBox.SelectedItem is string ssid)
+            {
+                // Attempt to connect (in background)
+                Task.Run(() => SystemControlHelper.ConnectToNetwork(ssid));
+            }
+        }
+
+        private void ManageWifi_Click(object sender, RoutedEventArgs e)
+        {
+            SystemControlHelper.OpenWifiSettings();
+        }
+
+        private void VolUp_Click(object sender, RoutedEventArgs e)
+        {
+            var handle = new WindowInteropHelper(this).Handle;
+            SystemControlHelper.IncreaseVolume(handle);
+        }
+
+        private void VolDown_Click(object sender, RoutedEventArgs e)
+        {
+            var handle = new WindowInteropHelper(this).Handle;
+            SystemControlHelper.DecreaseVolume(handle);
         }
 
         private void LoadGallery()
@@ -129,7 +191,7 @@ namespace NvidiaCi
         
         private void OpenImage_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is System.Windows.Controls.MenuItem mi && mi.DataContext is string imagePath)
+            if (sender is System.Windows.Controls.MenuItem mi && mi.Tag is string imagePath)
             {
                 Process.Start(new ProcessStartInfo(imagePath) { UseShellExecute = true });
             }
@@ -137,7 +199,7 @@ namespace NvidiaCi
 
         private void SaveImageAs_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is System.Windows.Controls.MenuItem mi && mi.DataContext is string imagePath)
+            if (sender is System.Windows.Controls.MenuItem mi && mi.Tag is string imagePath)
             {
                 var sfd = new Microsoft.Win32.SaveFileDialog {
                     FileName = System.IO.Path.GetFileName(imagePath),
@@ -154,7 +216,7 @@ namespace NvidiaCi
 
         private void DeleteImage_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is System.Windows.Controls.MenuItem mi && mi.DataContext is string imagePath)
+            if (sender is System.Windows.Controls.MenuItem mi && mi.Tag is string imagePath)
             {
                 try {
                     System.IO.File.Delete(imagePath);
@@ -249,7 +311,7 @@ namespace NvidiaCi
             }
         }
 
-        private void LaunchGame(string exePath)
+        private async void LaunchGame(string exePath)
         {
             try
             {
@@ -259,22 +321,22 @@ namespace NvidiaCi
                     WorkingDirectory = System.IO.Path.GetDirectoryName(exePath),
                     UseShellExecute = true 
                 });
-                this.Hide();
+                await HideAnimated();
             }
             catch { }
         }
 
         private void ScanButton_Click(object sender, RoutedEventArgs e) => RefreshGameList();
         private void OnClosed(object? sender, EventArgs e) => UnregisterGlobalHotkey();
-        private void Background_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private async void Background_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (e.OriginalSource is Grid)
             {
-                this.Hide();
+                await HideAnimated();
             }
         }
 
-        private void CloseButton_Click(object sender, RoutedEventArgs e) => this.Hide();
+        private async void CloseButton_Click(object sender, RoutedEventArgs e) => await HideAnimated();
 
         public void PositionWindow()
         {

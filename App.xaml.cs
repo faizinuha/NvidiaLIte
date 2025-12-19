@@ -11,10 +11,21 @@ namespace NvidiaCi
 
         protected override void OnStartup(StartupEventArgs e)
         {            
+            this.DispatcherUnhandledException += (s, args) => {
+                System.Diagnostics.Debug.WriteLine($"UNHANDLED ERROR: {args.Exception.Message}\n\nStack: {args.Exception.StackTrace}");
+                args.Handled = true;
+            };
+
             base.OnStartup(e);
 
             // 1. Buat instance jendela overlay tapi jangan tampilkan
-            _overlayWindow = new OverlayWindow();
+            try {
+                _overlayWindow = new OverlayWindow();
+            } catch (Exception ex) {
+                System.Diagnostics.Debug.WriteLine($"CRASH AT INIT: {ex.Message}\n{ex.InnerException?.Message}");
+                ShutdownApp();
+                return;
+            }
 
             // 2. Setup NotifyIcon (System Tray) with robust icon loading
             _notifyIcon = new NotifyIcon();
@@ -56,23 +67,17 @@ namespace NvidiaCi
             this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
         }
 
-        public void ToggleOverlay()
+        public async void ToggleOverlay()
         {
             if (_overlayWindow == null) return;
 
             if (_overlayWindow.IsVisible)
             {
-                _overlayWindow.Hide();
+                await _overlayWindow.HideAnimated();
             }
             else
             {
-                // Re-position before showing to ensure it covers the current primary screen resolution
-                _overlayWindow.PositionWindow();
-                _overlayWindow.Show();
-                _overlayWindow.Activate(); 
-                _overlayWindow.Topmost = false;
-                _overlayWindow.Topmost = true; // Flashing Topmost helps it stay on top
-                _overlayWindow.Focus();
+                await _overlayWindow.ShowAnimated();
             }
         }
 
