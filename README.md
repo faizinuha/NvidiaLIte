@@ -52,5 +52,12 @@ Aplikasi ini masih butuh sedikit "sentuhan tangan" buat jalaninnya.
 - **Hasil Foto**: Bisa kamu cek di folder `Pictures/Screenshots`.
 
 ---
+## 🖼️ Contoh Screenshot
+
+> <img src="doc/image.png" width="350px" style="margin-bottom: 10px"> 
+> <img src="doc/image copy.png" width="350px" style="margin-bottom: 10px"> 
+> <img src="doc/image copy 2.png" width="350px" style="margin-bottom: 10px"> 
+
+---
 
 _Dibuat dengan ❤️ oleh Zi._

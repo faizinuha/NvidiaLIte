@@ -1,7 +1,8 @@
 # Sertifikat & Build Output
 ZeroMixCert.pfx
 publish/
-build/
+build/Output/
+build/bin/
 build_log.txt
 
 # .NET Core / WPF khusus

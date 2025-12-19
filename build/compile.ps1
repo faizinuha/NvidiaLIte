@@ -11,7 +11,7 @@ $IssScript = "$PSScriptRoot\compile.iss"
 
 # Signing Configuration
 $SignTool = "$PSScriptRoot\bin\osslsigncode.exe"
-$CertFile = "$ProjectRoot\ZeroMixCert.pfx"
+$CertFile = "$PSScriptRoot\ZeroMixCert.pfx"
 $CertPassword = "ZeroMixPass"
 $TimestampServer = "http://timestamp.digicert.com"
 
@@ -43,16 +43,25 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # Sign the main executable
-Sign-File "$BuildDir\NvidiaCi.exe"
+$MainExe = "$BuildDir\NvidiaCi.exe"
+if (Test-Path $MainExe) {
+    Sign-File $MainExe
+} else {
+    Write-Warning "Main executable not found at $MainExe"
+}
 
-Write-Host "--- 3. Compiling Installer with Inno Setup ---" -ForegroundColor Cyan
+Write-Host "--- 3. Compiling Installer with Inno Setup (Signing Enabled) ---" -ForegroundColor Cyan
 if (Test-Path $InnoSetupExe) {
-    & $InnoSetupExe "$IssScript"
+    # Define the SignTool command for Inno Setup
+    # $f is replaced by Inno Setup with the file path to sign
+    $SignCmd = "cmd /c `"`"$SignTool`" sign -pkcs12 `"$CertFile`" -pass $CertPassword -ts $TimestampServer -in `$f -out `$f.signed && move /Y `$f.signed `$f`""
     
-    # Sign the resulting installer
-    $InstallerPath = "$PSScriptRoot\Output\NvidiaLite_Setup_v1.4.exe"
-    if (Test-Path $InstallerPath) {
-        Sign-File $InstallerPath
+    & $InnoSetupExe /S"standard=$SignCmd" "$IssScript"
+    
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "Successfully compiled and signed the installer." -ForegroundColor Green
+    } else {
+        Write-Error "Inno Setup compilation failed!"
     }
 } else {
     Write-Error "Inno Setup Compiler (ISCC.exe) not found at $InnoSetupExe"

@@ -8,9 +8,19 @@ namespace NvidiaCi
     {
         private NotifyIcon? _notifyIcon;
         private OverlayWindow? _overlayWindow;
+        private static System.Threading.Mutex? _mutex;
 
         protected override void OnStartup(StartupEventArgs e)
         {            
+            // Multiple instance prevention
+            _mutex = new System.Threading.Mutex(true, "NvidiaCiMutex", out bool createdNew);
+            if (!createdNew)
+            {
+                System.Windows.MessageBox.Show("Aplikasi sudah berjalan.", "NVIDIA Lite", MessageBoxButton.OK, MessageBoxImage.Information);
+                System.Windows.Application.Current.Shutdown();
+                return;
+            }
+
             this.DispatcherUnhandledException += (s, args) => {
                 System.Diagnostics.Debug.WriteLine($"UNHANDLED ERROR: {args.Exception.Message}\n\nStack: {args.Exception.StackTrace}");
                 args.Handled = true;
