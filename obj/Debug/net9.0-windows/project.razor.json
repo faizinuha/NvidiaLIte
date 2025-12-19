@@ -1,0 +1,20 @@
+{
+  "SerializedFilePath": "/home/user/nvidialite/obj/Debug/net9.0-windows/project.razor.json",
+  "FilePath": "/home/user/nvidialite/myapp.csproj",
+  "Configuration": {
+    "ConfigurationName": "MVC-3.0",
+    "LanguageVersion": "8.0",
+    "Extensions": [
+      {
+        "ExtensionName": "MVC-3.0"
+      }
+    ]
+  },
+  "ProjectWorkspaceState": {
+    "TagHelpers": [],
+    "CSharpLanguageVersion": 1300
+  },
+  "RootNamespace": "myapp",
+  "Documents": [],
+  "SerializationFormat": "0.3"
+}

@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace MyWpfApp
+namespace myapp
 {
     public partial class OverlayWindow : Window
     {

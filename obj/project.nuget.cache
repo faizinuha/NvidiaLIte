@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "/0CmVJLd2/Q=",
+  "dgSpecHash": "2yzknea9h4s=",
   "success": true,
   "projectFilePath": "/home/user/nvidialite/myapp.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "/home/user/.nuget/packages/microsoft.windowsdesktop.app.ref/9.0.4/microsoft.windowsdesktop.app.ref.9.0.4.nupkg.sha512"
+  ],
   "logs": []
 }
