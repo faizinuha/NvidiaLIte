@@ -102,6 +102,10 @@ namespace NvidiaCi
                     LoadWifiNetworks();
                     break;
             }
+
+            // Trigger Fade-in Animation
+            var sb = (Storyboard)this.Resources["FadeInContent"];
+            sb.Begin(ContentView);
         }
 
         private void SyncSystemSliders()
@@ -247,6 +251,27 @@ namespace NvidiaCi
             if (sender is System.Windows.Controls.MenuItem mi && mi.Tag is string imagePath)
             {
                 Process.Start(new ProcessStartInfo(imagePath) { UseShellExecute = true });
+            }
+        }
+
+        private void CopyImage_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.MenuItem mi && mi.Tag is string imagePath)
+            {
+                try
+                {
+                    // Copy file to clipboard (as file and as image)
+                    var paths = new System.Collections.Specialized.StringCollection { imagePath };
+                    System.Windows.Clipboard.SetFileDropList(paths);
+                    
+                    // Also copy as bitmap image for quick paste in Discord/PS
+                    var bitmap = new System.Windows.Media.Imaging.BitmapImage(new Uri(imagePath));
+                    System.Windows.Clipboard.SetImage(bitmap);
+                }
+                catch (Exception ex)
+                {
+                    System.Windows.MessageBox.Show($"Failed to copy image: {ex.Message}");
+                }
             }
         }
 
@@ -422,6 +447,27 @@ namespace NvidiaCi
 
         private void ScanButton_Click(object sender, RoutedEventArgs e) => RefreshGameList();
         private void OnClosed(object? sender, EventArgs e) => UnregisterGlobalHotkey();
+        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            try
+            {
+                string query = SearchBox.Text.ToLower().Trim();
+                var games = _dataManager.LoadGames();
+                
+                if (string.IsNullOrEmpty(query))
+                {
+                    GameListBox.ItemsSource = games;
+                }
+                else
+                {
+                    var filtered = games.Where(g => g.Name.ToLower().Contains(query)).ToList();
+                    GameListBox.ItemsSource = filtered;
+                    NoGamesFoundText.Visibility = filtered.Any() ? Visibility.Collapsed : Visibility.Visible;
+                }
+            }
+            catch { }
+        }
+
         private async void Background_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (e.OriginalSource is Grid)

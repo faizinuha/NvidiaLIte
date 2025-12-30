@@ -12,6 +12,7 @@
         KeyDown="OnWindowKeyDown">
 
     <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <!-- macOS-style Paper Slide Animation -->
         <Storyboard x:Key="ShowSidebar">
             <DoubleAnimation Storyboard.TargetName="SidebarBorder" 
@@ -37,6 +38,10 @@
             <DoubleAnimation Storyboard.TargetName="MainRootGrid" 
                              Storyboard.TargetProperty="Opacity"
                              To="0" Duration="0:0:0.3"/>
+        </Storyboard>
+
+        <Storyboard x:Key="FadeInContent">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3"/>
         </Storyboard>
     </Window.Resources>
 
@@ -118,7 +123,12 @@
                     <Separator Grid.Row="0" VerticalAlignment="Bottom" Background="#1AFFFFFF" Margin="30,0,25,0" Height="1"/>
 
                     <!-- Content Views -->
-                    <Grid Grid.Row="1">
+                    <Grid Grid.Row="1" x:Name="ContentView">
+                        <Grid.Resources>
+                            <Style TargetType="Grid">
+                                <Setter Property="Opacity" Value="1"/>
+                            </Style>
+                        </Grid.Resources>
                         <!-- Dashboard View -->
                         <Grid x:Name="DashboardView" Visibility="Visible">
                             <Grid.RowDefinitions>
@@ -127,7 +137,23 @@
                             </Grid.RowDefinitions>
                             
                             <Grid Grid.Row="0" Margin="20">
-                                <ListBox x:Name="GameListBox"
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <!-- Search Bar -->
+                                <Border Grid.Row="0" Margin="10,0,15,20" Background="#1AFFFFFF" CornerRadius="4" BorderBrush="#33FFFFFF" BorderThickness="1">
+                                    <Grid>
+                                        <TextBlock Text="🔍 Filter games..." Foreground="#66FFFFFF" Margin="10,0" VerticalAlignment="Center" IsHitTestVisible="False" 
+                                                   Visibility="{Binding Text.IsEmpty, ElementName=SearchBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                        <TextBox x:Name="SearchBox" Background="Transparent" BorderThickness="0" Foreground="White" 
+                                                 Padding="10,8" VerticalContentAlignment="Center" CaretBrush="{StaticResource AccentColor}"
+                                                 TextChanged="SearchBox_TextChanged"/>
+                                    </Grid>
+                                </Border>
+
+                                <ListBox Grid.Row="1" x:Name="GameListBox"
                                          Background="Transparent"
                                          BorderThickness="0"
                                          Padding="0,0,5,0"
@@ -148,9 +174,10 @@
                                     </ListBox.Resources>
                                 </ListBox>
 
-                                <TextBlock x:Name="NoGamesFoundText" Text="NO GAMES FOUND" 
-                                           Foreground="#444444" FontSize="14" FontWeight="Bold" 
-                                           VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed"/>
+                                <StackPanel Grid.Row="1" x:Name="NoGamesFoundText" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed">
+                                    <TextBlock Text="🎮" FontSize="48" Foreground="#222222" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                                    <TextBlock Text="NO GAMES FOUND" Foreground="#444444" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                </StackPanel>
                             </Grid>
 
                             <Border Grid.Row="1" Background="#05FFFFFF" Padding="30">
@@ -185,10 +212,12 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Margin="0,0,10,10" Width="170" Height="100" CornerRadius="4" Background="#111111" BorderBrush="#222222" BorderThickness="1" ClipToBounds="True" Cursor="Hand">
+                                            <Border Margin="0,0,10,10" Width="170" Height="100" CornerRadius="8" Background="#111111" BorderBrush="#222222" BorderThickness="1" ClipToBounds="True" Cursor="Hand">
                                                 <Border.ContextMenu>
                                                     <ContextMenu>
                                                         <MenuItem Header="Open Image" Click="OpenImage_Click" 
+                                                                  Tag="{Binding Path, RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.DataContext.Path}"/>
+                                                        <MenuItem Header="Copy to Clipboard" Click="CopyImage_Click"
                                                                   Tag="{Binding Path, RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.DataContext.Path}"/>
                                                         <MenuItem Header="Save As..." Click="SaveImageAs_Click"
                                                                   Tag="{Binding Path, RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.DataContext.Path}"/>
@@ -231,7 +260,7 @@
                                             <TextBlock Text="Screen Brightness" Foreground="White" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,5"/>
                                             <Slider x:Name="BrightnessSlider" Minimum="0" Maximum="100" Value="100" 
                                                     ValueChanged="BrightnessSlider_ValueChanged"
-                                                    Background="#333" Foreground="{StaticResource AccentColor}" 
+                                                    Style="{StaticResource NvidiaSliderStyle}"
                                                     Width="250" HorizontalAlignment="Left"/>
                                         </StackPanel>
                                     </Grid>
@@ -249,7 +278,7 @@
                                             <TextBlock Text="System Volume" Foreground="White" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,5"/>
                                             <Slider x:Name="VolumeSlider" Minimum="0" Maximum="100" Value="50" 
                                                     ValueChanged="VolumeSlider_ValueChanged"
-                                                    Background="#333" Foreground="{StaticResource AccentColor}" 
+                                                    Style="{StaticResource NvidiaSliderStyle}"
                                                     Width="250" HorizontalAlignment="Left"/>
                                         </StackPanel>
                                     </Grid>

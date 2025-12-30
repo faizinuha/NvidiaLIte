@@ -11,31 +11,94 @@
 
         <!-- Game Item Template (Grid Card) -->
         <DataTemplate x:Key="GameItemTemplate">
-            <Grid Width="100" Margin="5">
+            <Grid Width="120" Margin="8">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="100" />
+                    <RowDefinition Height="160" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 
-                <Border Grid.Row="0" Background="#1AFFFFFF" CornerRadius="8" Margin="0,0,0,8">
+                <Border Grid.Row="0" Background="#1AFFFFFF" CornerRadius="8" Margin="0,0,0,10" x:Name="ImageBorder">
                     <Grid>
-                        <TextBlock Text="🎮" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="36" Opacity="0.5"/>
-                        <!-- In the future, we can add game posters here -->
+                        <!-- Glow effect on hover -->
+                        <Border x:Name="GlowEffect" CornerRadius="8" BorderBrush="{StaticResource AccentColor}" BorderThickness="2" Opacity="0">
+                            <Border.Effect>
+                                <BlurEffect Radius="10"/>
+                            </Border.Effect>
+                        </Border>
+                        
+                        <TextBlock Text="🎮" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="48" Opacity="0.3"/>
+                        
+                        <!-- Overlay Play Icon on Hover -->
+                        <Border x:Name="PlayOverlay" Background="#80000000" CornerRadius="8" Opacity="0">
+                            <TextBlock Text="▶" Foreground="White" FontSize="30" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
                     </Grid>
                 </Border>
                 
                 <TextBlock Grid.Row="1" Text="{Binding Name}" Foreground="{StaticResource TextColor}" 
-                           FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" TextAlignment="Center" 
-                           TextWrapping="Wrap" MaxHeight="30" />
+                           FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" TextAlignment="Center" 
+                           TextWrapping="Wrap" MaxHeight="40" Opacity="0.9" />
             </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                    <Setter TargetName="GlowEffect" Property="Opacity" Value="0.5" />
+                    <Setter TargetName="PlayOverlay" Property="Opacity" Value="1" />
+                    <Setter TargetName="ImageBorder" Property="Background" Value="#33FFFFFF" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
         </DataTemplate>
+
+        <!-- Premium Slider Style -->
+        <Style x:Key="NvidiaSliderStyle" TargetType="Slider">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto" MinHeight="{TemplateBinding MinHeight}"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Border x:Name="TrackBackground" Grid.Row="1" Height="4" Background="#33FFFFFF" CornerRadius="2" VerticalAlignment="Center"/>
+                            <Track x:Name="PART_Track" Grid.Row="1">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="Slider.DecreaseLarge">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Height="4" Background="{StaticResource AccentColor}" CornerRadius="2"/>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Width="16" Height="16">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Ellipse Fill="White" Stroke="{StaticResource AccentColor}" StrokeThickness="2">
+                                                    <Ellipse.Effect>
+                                                        <DropShadowEffect BlurRadius="5" ShadowDepth="0" Color="Black" Opacity="0.5"/>
+                                                    </Ellipse.Effect>
+                                                </Ellipse>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
         <!-- ListBoxItem Style -->
         <Style x:Key="GameItemStyle" TargetType="ListBoxItem">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Margin" Value="2,2,2,2"/>
-            <Setter Property="Padding" Value="5"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="Padding" Value="0"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
@@ -43,18 +106,9 @@
                                 Background="{TemplateBinding Background}" 
                                 BorderBrush="{TemplateBinding BorderBrush}" 
                                 BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="8"
-                                Padding="{TemplateBinding Padding}">
+                                CornerRadius="10">
                             <ContentPresenter />
                         </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="#33FFFFFF" />
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="{StaticResource AccentColor}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -64,28 +118,29 @@
         <Style x:Key="NavButtonStyle" TargetType="RadioButton">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Width" Value="60" />
-            <Setter Property="Height" Value="60" />
+            <Setter Property="Width" Value="75" />
+            <Setter Property="Height" Value="75" />
             <Setter Property="FontSize" Value="24" />
-            <Setter Property="Foreground" Value="#888888" />
+            <Setter Property="Foreground" Value="#66FFFFFF" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
                         <Border Background="{TemplateBinding Background}" x:Name="Border">
                             <Grid>
-                                <Rectangle x:Name="Indicator" Fill="{StaticResource AccentColor}" HorizontalAlignment="Left" Width="3" Visibility="Collapsed"/>
+                                <Rectangle x:Name="Indicator" Fill="{StaticResource AccentColor}" HorizontalAlignment="Left" Width="4" Visibility="Collapsed"/>
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter Property="Foreground" Value="White" />
+                                <Setter Property="Foreground" Value="{StaticResource AccentColor}" />
                                 <Setter TargetName="Indicator" Property="Visibility" Value="Visible" />
-                                <Setter TargetName="Border" Property="Background" Value="#1AFFFFFF" />
+                                <Setter TargetName="Border" Property="Background" Value="#0DFFFFFF" />
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="#0DFFFFFF" />
+                                <Setter TargetName="Border" Property="Background" Value="#1AFFFFFF" />
+                                <Setter Property="Foreground" Value="White" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
