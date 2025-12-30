@@ -277,8 +277,9 @@ namespace NvidiaCi
 
         private void GalleryItem_PreviewClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if (sender is FrameworkElement fe && fe.DataContext is dynamic data)
+            if (sender is FrameworkElement fe && fe.DataContext != null)
             {
+                dynamic data = fe.DataContext;
                 FullImageDisplay.Source = data.Source;
                 ImagePreviewModal.Visibility = Visibility.Visible;
             }

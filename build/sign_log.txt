@@ -5,3 +5,17 @@ Connecting to http://timestamp.digicert.com
 Succeeded
         1 file(s) moved.
 Successfully signed and moved. 
+[Tue 12/30/2025 10:57:54.32] Signing: "C:\Aplikasi Win\NvidiaLIte\build\Output\uninst.e32.tmp" 
+Unable to load provider: legacy
+Warning: Legacy mode disabled
+Connecting to http://timestamp.digicert.com
+Succeeded
+        1 file(s) moved.
+Successfully signed and moved. 
+[Tue 12/30/2025 10:58:06.87] Signing: "C:\Aplikasi Win\NvidiaLIte\build\Output\NvidiaLite_Setup_v1.4.exe" 
+Unable to load provider: legacy
+Warning: Legacy mode disabled
+Connecting to http://timestamp.digicert.com
+Succeeded
+        1 file(s) moved.
+Successfully signed and moved. 
