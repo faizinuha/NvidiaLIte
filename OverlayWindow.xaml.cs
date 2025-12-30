@@ -275,6 +275,33 @@ namespace NvidiaCi
             }
         }
 
+        private void GalleryItem_PreviewClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.DataContext is dynamic data)
+            {
+                FullImageDisplay.Source = data.Source;
+                ImagePreviewModal.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void ClosePreview_Click(object sender, RoutedEventArgs e)
+        {
+            ImagePreviewModal.Visibility = Visibility.Collapsed;
+        }
+
+        private void ClosePreview_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            ImagePreviewModal.Visibility = Visibility.Collapsed;
+        }
+
+        private void CopyCurrentPreview_Click(object sender, RoutedEventArgs e)
+        {
+            if (FullImageDisplay.Source is System.Windows.Media.Imaging.BitmapSource bitmap)
+            {
+                System.Windows.Clipboard.SetImage(bitmap);
+            }
+        }
+
         private void SaveImageAs_Click(object sender, RoutedEventArgs e)
         {
             if (sender is System.Windows.Controls.MenuItem mi && mi.Tag is string imagePath)
@@ -385,6 +412,16 @@ namespace NvidiaCi
 
         private void OnWindowKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
+            if (e.Key == System.Windows.Input.Key.Escape)
+            {
+                if (ImagePreviewModal.Visibility == Visibility.Visible)
+                {
+                    ImagePreviewModal.Visibility = Visibility.Collapsed;
+                    e.Handled = true;
+                    return;
+                }
+            }
+
             // Ignore modifiers themselves as primary keys if needed, or handle them
             if (e.Key == System.Windows.Input.Key.LeftAlt || e.Key == System.Windows.Input.Key.RightAlt ||
                 e.Key == System.Windows.Input.Key.LeftCtrl || e.Key == System.Windows.Input.Key.RightCtrl ||

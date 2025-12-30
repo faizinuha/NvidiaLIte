@@ -15,7 +15,7 @@ $IssScript        = "$BuildDir\compile.iss"
 $InnoSetup        = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 
 $AppName          = "NvidiaLite"
-$Version          = "1.4"
+$Version          = "1.5"
 
 $InstallerName    = "NvidiaLite_Setup_v$Version.exe"
 $InstallerPath    = "$BuildDir\Output\$InstallerName"

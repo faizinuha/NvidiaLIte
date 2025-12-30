@@ -1,5 +1,5 @@
 ﻿NvidiaCi
-1.0.0.0
+
 
 winexe
 C#
@@ -12,9 +12,9 @@ TRACE;DEBUG;NET;NET9_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR
 C:\Aplikasi Win\NvidiaLIte\App.xaml
 11067674342
 
-111108121860
+9-1197580610
 218-1714334582
 OverlayWindow.xaml;
 
-True
+False
 

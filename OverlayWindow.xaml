@@ -57,8 +57,43 @@
         <Grid Background="#22000000" MouseLeftButtonDown="Background_MouseLeftButtonDown" />
 
         <!-- Notification/Flash Effect for Screenshots -->
-        <Border x:Name="FlashBorder" Background="White" Visibility="Collapsed" IsHitTestVisible="False" Opacity="0.5"/>
+        <Border x:Name="FlashBorder" Background="White" Visibility="Collapsed" IsHitTestVisible="False" Opacity="0.5" Panel.ZIndex="100"/>
         
+        <!-- Image Preview Modal -->
+        <Grid x:Name="ImagePreviewModal" Visibility="Collapsed" Background="#F2000000" Panel.ZIndex="90">
+            <Grid MouseLeftButtonDown="ClosePreview_Click">
+                <Image x:Name="FullImageDisplay" Margin="100" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality">
+                    <Image.Effect>
+                        <DropShadowEffect BlurRadius="50" ShadowDepth="0" Color="Black" Opacity="1"/>
+                    </Image.Effect>
+                </Image>
+            </Grid>
+            
+            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Right" Orientation="Horizontal" Margin="40">
+                <Button Content="" FontFamily="Segoe MDL2 Assets" FontSize="20" Background="#33FFFFFF" Foreground="White" Width="50" Height="50" Click="CopyCurrentPreview_Click" Margin="0,0,10,0" ToolTip="Copy to clipboard"/>
+                <Button Content="" FontFamily="Segoe MDL2 Assets" FontSize="20" Background="#33FFFFFF" Foreground="White" Width="50" Height="50" Click="ClosePreview_Click">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="25">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#66FFFFFF"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </StackPanel>
+        </Grid>
+
         <!-- Sidebar Container (Left Side) -->
         <Border x:Name="SidebarBorder" HorizontalAlignment="Left" Width="650" Background="{StaticResource BackgroundColor}" 
                 BorderBrush="{StaticResource AccentColor}" BorderThickness="0,0,2,0">
@@ -212,7 +247,8 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Margin="0,0,10,10" Width="170" Height="100" CornerRadius="8" Background="#111111" BorderBrush="#222222" BorderThickness="1" ClipToBounds="True" Cursor="Hand">
+                                            <Border Margin="0,0,10,10" Width="170" Height="100" CornerRadius="8" Background="#111111" BorderBrush="#222222" BorderThickness="1" ClipToBounds="True" Cursor="Hand"
+                                                    MouseLeftButtonDown="GalleryItem_PreviewClick">
                                                 <Border.ContextMenu>
                                                     <ContextMenu>
                                                         <MenuItem Header="Open Image" Click="OpenImage_Click" 
