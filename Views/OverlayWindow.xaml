@@ -111,6 +111,7 @@
                     <StackPanel Margin="0,80,0,0">
                         <RadioButton x:Name="DashboardTab" Style="{StaticResource NavButtonStyle}" IsChecked="True" Content="🎮" Tag="Dashboard" Click="Tab_Click" />
                         <RadioButton x:Name="GalleryTab" Style="{StaticResource NavButtonStyle}" Content="🖼️" Tag="Gallery" Click="Tab_Click" />
+                        <RadioButton x:Name="FiltersTab" Style="{StaticResource NavButtonStyle}" Content="🎨" Tag="Filters" Click="Tab_Click" />
                         <RadioButton x:Name="SettingsTab" Style="{StaticResource NavButtonStyle}" Content="⚙️" Tag="Settings" Click="Tab_Click" />
                     </StackPanel>
                 </Border>
@@ -270,6 +271,65 @@
                             </ScrollViewer>
                             
                             <TextBlock Grid.Row="1" Text="No screenshots found." x:Name="NoGalleryText" Visibility="Visible" Foreground="#444444" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Grid>
+
+                        <!-- Filters View -->
+                        <Grid x:Name="FiltersView" Visibility="Collapsed" Margin="30">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel>
+                                    <TextBlock Text="SCREEN FILTERS" Foreground="{StaticResource TextColor}" FontSize="12" FontWeight="Bold" Margin="0,0,0,5" Opacity="0.5"/>
+                                    <TextBlock Text="Applies a real-time color overlay on top of your screen." Foreground="#555555" FontSize="11" Margin="0,0,0,25"/>
+
+                                    <!-- Preset Buttons -->
+                                    <TextBlock Text="PRESETS" Foreground="#FFAAAAAA" FontSize="11" FontWeight="Bold" Margin="0,0,0,15"/>
+                                    <WrapPanel Margin="0,0,0,25">
+                                        <Button Content="OFF" Tag="None" Click="FilterPreset_Click" Style="{StaticResource FilterPresetButtonStyle}" Margin="0,0,8,8"/>
+                                        <Button Content="🌟 VIVID" Tag="Vivid" Click="FilterPreset_Click" Style="{StaticResource FilterPresetButtonStyle}" Margin="0,0,8,8"/>
+                                        <Button Content="❄️ COOL" Tag="CoolBlue" Click="FilterPreset_Click" Style="{StaticResource FilterPresetButtonStyle}" Margin="0,0,8,8"/>
+                                        <Button Content="🌙 NIGHT" Tag="NightMode" Click="FilterPreset_Click" Style="{StaticResource FilterPresetButtonStyle}" Margin="0,0,8,8"/>
+                                        <Button Content="🎬 CINEMA" Tag="Cinematic" Click="FilterPreset_Click" Style="{StaticResource FilterPresetButtonStyle}" Margin="0,0,8,8"/>
+                                    </WrapPanel>
+
+                                    <Separator Background="#1AFFFFFF" Height="1" Margin="0,0,0,25"/>
+
+                                    <!-- Custom Tint -->
+                                    <TextBlock Text="CUSTOM TINT" Foreground="#FFAAAAAA" FontSize="11" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                                    <!-- Color Swatches -->
+                                    <TextBlock Text="Color" Foreground="#888888" FontSize="12" Margin="0,0,0,10"/>
+                                    <WrapPanel Margin="0,0,0,20">
+                                        <Border x:Name="SwatchRed"    Width="32" Height="32" CornerRadius="16" Background="#FFFF3B30" Margin="0,0,8,0" Cursor="Hand" MouseLeftButtonDown="Swatch_Click" Tag="#FFFF3B30"/>
+                                        <Border x:Name="SwatchOrange" Width="32" Height="32" CornerRadius="16" Background="#FFFF9500" Margin="0,0,8,0" Cursor="Hand" MouseLeftButtonDown="Swatch_Click" Tag="#FFFF9500"/>
+                                        <Border x:Name="SwatchYellow" Width="32" Height="32" CornerRadius="16" Background="#FFFFCC00" Margin="0,0,8,0" Cursor="Hand" MouseLeftButtonDown="Swatch_Click" Tag="#FFFFCC00"/>
+                                        <Border x:Name="SwatchGreen"  Width="32" Height="32" CornerRadius="16" Background="#FF34C759" Margin="0,0,8,0" Cursor="Hand" MouseLeftButtonDown="Swatch_Click" Tag="#FF34C759"/>
+                                        <Border x:Name="SwatchBlue"   Width="32" Height="32" CornerRadius="16" Background="#FF007AFF" Margin="0,0,8,0" Cursor="Hand" MouseLeftButtonDown="Swatch_Click" Tag="#FF007AFF"/>
+                                        <Border x:Name="SwatchPurple" Width="32" Height="32" CornerRadius="16" Background="#FFAF52DE" Margin="0,0,8,0" Cursor="Hand" MouseLeftButtonDown="Swatch_Click" Tag="#FFAF52DE"/>
+                                        <Border x:Name="SwatchWhite"  Width="32" Height="32" CornerRadius="16" Background="#FFFFFFFF" Margin="0,0,8,0" Cursor="Hand" MouseLeftButtonDown="Swatch_Click" Tag="#FFFFFFFF"/>
+                                    </WrapPanel>
+
+                                    <!-- Opacity Slider -->
+                                    <TextBlock Text="Intensity" Foreground="#888888" FontSize="12" Margin="0,0,0,10"/>
+                                    <Grid Margin="0,0,0,25">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="40"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Slider x:Name="FilterOpacitySlider" Minimum="0" Maximum="60" Value="20"
+                                                Style="{StaticResource NvidiaSliderStyle}"
+                                                ValueChanged="FilterOpacity_Changed"/>
+                                        <TextBlock Grid.Column="1" x:Name="FilterOpacityLabel" Text="20%" 
+                                                   Foreground="#888888" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                    </Grid>
+
+                                    <!-- Active Filter Status -->
+                                    <Border Background="#0DFFFFFF" CornerRadius="4" Padding="15,12" BorderBrush="#1AFFFFFF" BorderThickness="1">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse x:Name="FilterStatusDot" Width="8" Height="8" Fill="#555555" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                            <TextBlock x:Name="FilterStatusText" Text="No filter active" Foreground="#888888" FontSize="12" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </ScrollViewer>
                         </Grid>
 
                         <!-- Settings View -->

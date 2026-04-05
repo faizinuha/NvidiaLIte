@@ -1,0 +1,21 @@
+<Window x:Class="NvidiaCi.ScreenFilterWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ScreenFilter"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        IsHitTestVisible="False">
+
+    <!-- This window sits on top of everything and applies a color tint/filter effect -->
+    <Grid>
+        <Rectangle x:Name="FilterRect" IsHitTestVisible="False">
+            <Rectangle.Fill>
+                <SolidColorBrush x:Name="FilterBrush" Color="Transparent" Opacity="0"/>
+            </Rectangle.Fill>
+        </Rectangle>
+    </Grid>
+</Window>

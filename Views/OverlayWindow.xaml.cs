@@ -6,6 +6,7 @@ using System.Windows.Interop;
 using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 
 namespace NvidiaCi
@@ -21,6 +22,11 @@ namespace NvidiaCi
         private System.Windows.Input.Key _tempOverlayKey = System.Windows.Input.Key.Z;
         private System.Windows.Input.Key _tempScreenshotKey = System.Windows.Input.Key.F10;
 
+        // Filter state
+        private ScreenFilterWindow? _filterWindow;
+        private Color _selectedTintColor = Colors.White;
+        private FilterPreset _activePreset = FilterPreset.None;
+
 
         public OverlayWindow()
         {
@@ -32,6 +38,10 @@ namespace NvidiaCi
             this.Closed += OnClosed;
             PositionWindow();
             
+            // Init filter window (invisible, always on top)
+            _filterWindow = new ScreenFilterWindow();
+            _filterWindow.Show();
+
             // Start hidden but initialized
             this.Opacity = 0;
             this.Visibility = Visibility.Collapsed;
@@ -82,6 +92,7 @@ namespace NvidiaCi
         {
             DashboardView.Visibility = Visibility.Collapsed;
             GalleryView.Visibility = Visibility.Collapsed;
+            FiltersView.Visibility = Visibility.Collapsed;
             SettingsView.Visibility = Visibility.Collapsed;
 
             switch (viewName)
@@ -94,6 +105,10 @@ namespace NvidiaCi
                     GalleryView.Visibility = Visibility.Visible;
                     HeaderText.Text = " GALLERY";
                     LoadGallery();
+                    break;
+                case "Filters":
+                    FiltersView.Visibility = Visibility.Visible;
+                    HeaderText.Text = " FILTERS";
                     break;
                 case "Settings":
                     SettingsView.Visibility = Visibility.Visible;
@@ -484,7 +499,80 @@ namespace NvidiaCi
         }
 
         private void ScanButton_Click(object sender, RoutedEventArgs e) => RefreshGameList();
-        private void OnClosed(object? sender, EventArgs e) => UnregisterGlobalHotkey();
+        private void OnClosed(object? sender, EventArgs e)
+        {
+            UnregisterGlobalHotkey();
+            _filterWindow?.Close();
+        }
+
+        // --- FILTER HANDLERS ---
+
+        private void FilterPreset_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not System.Windows.Controls.Button btn || _filterWindow == null) return;
+
+            if (Enum.TryParse<FilterPreset>(btn.Tag?.ToString(), out var preset))
+            {
+                _activePreset = preset;
+                _filterWindow.ApplyFilter(preset);
+                UpdateFilterStatus();
+            }
+        }
+
+        private void Swatch_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (sender is not Border border || _filterWindow == null) return;
+
+            var colorStr = border.Tag?.ToString();
+            if (colorStr == null) return;
+
+            try
+            {
+                _selectedTintColor = (Color)ColorConverter.ConvertFromString(colorStr);
+                _activePreset = FilterPreset.None; // custom mode
+                _filterWindow.ApplyCustomTint(_selectedTintColor, FilterOpacitySlider.Value);
+                UpdateFilterStatus();
+            }
+            catch { }
+        }
+
+        private void FilterOpacity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!this.IsLoaded || _filterWindow == null) return;
+
+            FilterOpacityLabel.Text = $"{(int)e.NewValue}%";
+
+            if (_activePreset == FilterPreset.None)
+            {
+                _filterWindow.ApplyCustomTint(_selectedTintColor, e.NewValue);
+            }
+            else
+            {
+                // Re-apply preset (presets have fixed alpha, opacity slider adjusts intensity)
+                _filterWindow.ApplyFilter(_activePreset);
+            }
+        }
+
+        private void UpdateFilterStatus()
+        {
+            if (_activePreset == FilterPreset.None && _filterWindow != null)
+            {
+                bool hasCustom = FilterOpacitySlider.Value > 0;
+                FilterStatusDot.Fill = hasCustom
+                    ? new System.Windows.Media.SolidColorBrush(_selectedTintColor)
+                    : new System.Windows.Media.SolidColorBrush(Colors.Gray);
+                FilterStatusText.Text = hasCustom ? $"Custom tint active" : "No filter active";
+                FilterStatusText.Foreground = hasCustom
+                    ? new System.Windows.Media.SolidColorBrush(Colors.White)
+                    : new System.Windows.Media.SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88));
+            }
+            else
+            {
+                FilterStatusDot.Fill = new System.Windows.Media.SolidColorBrush(Color.FromRgb(0x76, 0xB9, 0x00));
+                FilterStatusText.Text = $"Preset: {_activePreset}";
+                FilterStatusText.Foreground = new System.Windows.Media.SolidColorBrush(Colors.White);
+            }
+        }
         private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             try
