@@ -1,0 +1,164 @@
+name: 🚀 Build & Release NvidiaLite
+
+# ─────────────────────────────────────────────────────────────────────────────
+# KAPAN WORKFLOW INI JALAN?
+#
+# 1. Otomatis  → Saat kamu push tag seperti: git tag v1.0.0 && git push --tags
+# 2. Manual    → Buka GitHub → Actions → klik "Run workflow" → isi versi
+#
+# CATATAN:
+# - Push biasa ke main/dev TIDAK trigger workflow ini
+# - Hanya tag 'v*' yang trigger build + release otomatis
+# ─────────────────────────────────────────────────────────────────────────────
+
+permissions:
+  contents: read
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g., 1.0.0)'
+        required: false
+
+jobs:
+  build:
+    name: 🏗️ Build & Release
+    runs-on: windows-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ─── STEP 1: Tentukan versi dari tag atau input manual ───────────────
+      - name: 🔢 Determine Version
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            TAG="v${{ github.event.inputs.version }}"
+          else
+            TAG="${{ github.ref_name }}"
+          fi
+          VERSION=${TAG#v}
+          echo "tag=$TAG"         >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "🚀 Building NvidiaLite $TAG"
+
+      - name: ⚙️ Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      # ─── STEP 2: Restore & Publish ───────────────────────────────────────
+      - name: 📦 Restore & Publish NvidiaLite
+        shell: pwsh
+        run: |
+          $VER = "${{ steps.version.outputs.version }}"
+          Write-Host "⏳ Restoring dependencies..."
+          dotnet restore NvidiaCi.csproj
+
+          Write-Host "⏳ Publishing application..."
+          dotnet publish NvidiaCi.csproj `
+            -c Release `
+            -o publish/win-x64 `
+            -p:Version=$VER `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            --self-contained true `
+            -r win-x64
+
+          Write-Host "✅ Publish complete"
+
+      # ─── STEP 3: Buat ZIP artifact ───────────────────────────────────────
+      - name: 📦 Prepare Release Artifacts
+        shell: pwsh
+        run: |
+          $VER = "${{ steps.version.outputs.version }}"
+
+          if (!(Test-Path "publish/win-x64")) {
+            Write-Host "❌ Publish folder not found"
+            exit 1
+          }
+
+          Write-Host "📦 Creating ZIP..."
+          Compress-Archive -Path "publish/win-x64/*" `
+            -DestinationPath "NvidiaLite-v$VER-win-x64.zip" -Force
+
+          $size = [math]::Round((Get-Item "NvidiaLite-v$VER-win-x64.zip").Length / 1MB, 2)
+          Write-Host "✅ NvidiaLite-v$VER-win-x64.zip ($size MB)"
+
+      # ─── STEP 4: Generate release notes dari RELEASES.md ─────────────────
+      - name: 📋 Extract Release Notes
+        shell: pwsh
+        run: |
+          $VER    = "${{ steps.version.outputs.version }}"
+          $TAG    = "${{ steps.version.outputs.tag }}"
+          $REPO   = "${{ github.repository }}"
+          $relUrl = "https://github.com/$REPO/blob/main/RELEASES.md"
+
+          $notes = ""
+          if (Test-Path "RELEASES.md") {
+            $content = Get-Content "RELEASES.md" -Raw
+            $pattern = "(?s)## \[v?$([regex]::Escape($VER))\].*?(?=\n## \[|\z)"
+            $match   = [regex]::Match($content, $pattern)
+
+            if ($match.Success) {
+              $bullets = [regex]::Matches($match.Value, '(?m)^- .+') |
+                         ForEach-Object { $_.Value.Trim() }
+              $notes   = ($bullets | Select-Object -First 4) -join "`n"
+            }
+          }
+
+          if ([string]::IsNullOrWhiteSpace($notes)) {
+            $notes = "- See full changelog for details."
+          }
+
+          $body  = "## 🎮 NvidiaLite $TAG`n`n"
+          $body += "### Highlights`n"
+          $body += "$notes`n`n"
+          $body += "> 📄 **[View full changelog →]($relUrl)**`n`n"
+          $body += "---`n`n"
+          $body += "### 📥 Downloads`n"
+          $body += "| File | Keterangan |`n"
+          $body += "|------|------------|`n"
+          $body += "| \`\`NvidiaLite-v$VER-win-x64.zip\`\` | Portable — extract & run langsung |`n`n"
+          $body += "### 🖥️ Requirements`n"
+          $body += "- Windows 10/11 x64`n"
+          $body += "- .NET 9 runtime sudah dibundle (tidak perlu install)"
+
+          $body | Out-File -FilePath "RELEASE_NOTES.md" -Encoding utf8
+          Write-Host "✅ Release notes generated"
+
+      # ─── STEP 5: Buat GitHub Release ─────────────────────────────────────
+      - name: 🏷️ Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name:   ${{ steps.version.outputs.tag }}
+          name:       "NvidiaLite ${{ steps.version.outputs.tag }}"
+          body_path:  RELEASE_NOTES.md
+          draft:      false
+          prerelease: ${{ contains(steps.version.outputs.tag, '-') }}
+          make_latest: true
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ─── STEP 6: Upload assets ────────────────────────────────────────────
+      - name: 📤 Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          files: |
+            NvidiaLite-v${{ steps.version.outputs.version }}-win-x64.zip
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
