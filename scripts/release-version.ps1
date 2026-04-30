@@ -1,224 +1,201 @@
 # =============================================================================
-# NVIDIA Lite - Release Script
-# Usage: .\scripts\script-release.ps1 --version 1.0.0
+# NvidiaLite Release Script
+#
+# Usage:
+#   .\scripts\release-version.ps1 -Version 1.0.0
+#   .\scripts\release-version.ps1 -Version 1.0.0 -DryRun
+#   .\scripts\release-version.ps1 -Version 1.0.0 -ForceBuild
 # =============================================================================
 
 param(
     [Parameter(Mandatory = $true)]
-    [string]$version
+    [string]$Version,
+
+    [switch]$DryRun,      # Preview saja, tidak commit/push
+    [switch]$ForceBuild   # Re-release tag yang sama (hapus tag lama, push ulang)
 )
 
-# --- Helpers -----------------------------------------------------------------
+$ErrorActionPreference = "Stop"
 
-function Write-Step([string]$msg) {
-    Write-Host "`n  --> $msg" -ForegroundColor Cyan
-}
-
-function Write-Success([string]$msg) {
-    Write-Host "  [OK] $msg" -ForegroundColor Green
-}
-
-function Write-Fail([string]$msg) {
-    Write-Host "  [FAIL] $msg" -ForegroundColor Red
+# ── Validasi format versi (semver: x.y.z atau x.y.z-suffix) ─────────────────
+if ($Version -notmatch '^\d+\.\d+\.\d+(-[\w\.]+)?$') {
+    Write-Host "  [FAIL] Format versi salah. Gunakan: 1.0.0 atau 1.0.0-beta" -ForegroundColor Red
     exit 1
 }
 
-function Write-Banner {
-    Write-Host ""
-    Write-Host "  =============================================" -ForegroundColor DarkGreen
-    Write-Host "   NVIDIA Lite - Release Builder" -ForegroundColor Green
-    Write-Host "   Version: v$version" -ForegroundColor White
-    Write-Host "  =============================================" -ForegroundColor DarkGreen
-    Write-Host ""
+$Tag = "v$Version"
+
+# ── Banner ───────────────────────────────────────────────────────────────────
+Write-Host ""
+Write-Host "  =============================================" -ForegroundColor DarkGreen
+Write-Host "   NvidiaLite Release — $Tag"                   -ForegroundColor Green
+Write-Host "  =============================================" -ForegroundColor DarkGreen
+if ($DryRun)    { Write-Host "  [DRY RUN — tidak ada yang di-commit/push]"             -ForegroundColor Yellow }
+if ($ForceBuild){ Write-Host "  [FORCE BUILD — tag lama akan dihapus & di-push ulang]" -ForegroundColor Magenta }
+Write-Host ""
+
+# ── Cek prerequisites ────────────────────────────────────────────────────────
+Write-Host "0. Checking prerequisites..." -ForegroundColor Yellow
+
+if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
+    Write-Host "  [FAIL] .NET SDK tidak ditemukan." -ForegroundColor Red; exit 1
 }
-
-# --- Validate version format (semver: x.y.z or x.y.z-suffix) ----------------
-
-function Assert-Version([string]$v) {
-    if ($v -notmatch '^\d+\.\d+\.\d+(-[\w\.]+)?$') {
-        Write-Fail "Invalid version format '$v'. Expected: 1.0.0 or 1.0.0-beta"
-    }
+if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+    Write-Host "  [FAIL] Git tidak ditemukan." -ForegroundColor Red; exit 1
 }
-
-# --- Check prerequisites -----------------------------------------------------
-
-function Assert-Prerequisites {
-    Write-Step "Checking prerequisites..."
-
-    if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
-        Write-Fail ".NET SDK not found. Install from https://dotnet.microsoft.com/download"
-    }
-    Write-Success ".NET SDK found: $(dotnet --version)"
-
-    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-        Write-Fail "Git not found."
-    }
-    Write-Success "Git found: $(git --version)"
-
-    # Must be run from repo root
-    if (-not (Test-Path "NvidiaCi.csproj")) {
-        Write-Fail "Run this script from the project root (where NvidiaCi.csproj lives)."
-    }
-    Write-Success "Project file found."
+if (-not (Test-Path "NvidiaCi.csproj")) {
+    Write-Host "  [FAIL] Jalankan script dari root project (tempat NvidiaCi.csproj berada)." -ForegroundColor Red; exit 1
 }
+Write-Host "   .NET $(dotnet --version) | $(git --version)" -ForegroundColor Green
 
-# --- Check git working tree is clean -----------------------------------------
+# ── Step 1: Update versi di csproj ───────────────────────────────────────────
+Write-Host ""
+Write-Host "1. Updating version in NvidiaCi.csproj..." -ForegroundColor Yellow
 
-function Assert-CleanGit {
-    Write-Step "Checking git status..."
+$csproj  = "NvidiaCi.csproj"
+$content = Get-Content $csproj -Raw
 
-    $status = git status --porcelain
-    if ($status) {
-        Write-Host ""
-        Write-Host "  Uncommitted changes detected:" -ForegroundColor Yellow
-        $status | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkYellow }
-        Write-Host ""
-        $confirm = Read-Host "  Continue anyway? (y/N)"
-        if ($confirm -ne 'y') {
-            Write-Fail "Aborted. Commit or stash your changes first."
-        }
+# Gunakan simple string replace, bukan regex, agar path seperti Assets\icon.ico aman
+function Set-XmlTag([string]$xml, [string]$tag, [string]$value) {
+    $open  = "<$tag>"
+    $close = "</$tag>"
+    if ($xml -match [regex]::Escape($open)) {
+        # Tag sudah ada — replace isinya
+        return [regex]::Replace($xml, "$([regex]::Escape($open)).*?$([regex]::Escape($close))", "$open$value$close")
     } else {
-        Write-Success "Working tree is clean."
+        # Tag belum ada — inject sebelum </PropertyGroup> pertama
+        return $xml -replace '</PropertyGroup>', "$open$value$close`n  </PropertyGroup>", 1
     }
 }
 
-# --- Update version in .csproj -----------------------------------------------
+$newContent = Set-XmlTag $content "Version"         $Version
+$newContent = Set-XmlTag $newContent "AssemblyVersion" "$Version.0"
 
-function Update-CsprojVersion([string]$v) {
-    Write-Step "Updating version in NvidiaCi.csproj to $v..."
+if ($content -eq $newContent) {
+    Write-Host "   unchanged: $csproj" -ForegroundColor Gray
+} else {
+    if (-not $DryRun) { Set-Content $csproj $newContent -NoNewline }
+    Write-Host "   updated:   $csproj  →  Version=$Version" -ForegroundColor Green
+}
 
-    $csproj = "NvidiaCi.csproj"
-    $content = Get-Content $csproj -Raw
+# ── Step 2: Cek RELEASES.md punya entry versi ini ────────────────────────────
+Write-Host ""
+Write-Host "2. Checking RELEASES.md..." -ForegroundColor Yellow
 
-    # Inject or replace <Version> and <AssemblyVersion> tags
-    if ($content -match '<Version>.*?</Version>') {
-        $content = $content -replace '<Version>.*?</Version>', "<Version>$v</Version>"
+if (Test-Path "RELEASES.md") {
+    $cl = Get-Content "RELEASES.md" -Raw
+    if ($cl -match "## \[v?$([regex]::Escape($Version))\]") {
+        Write-Host "   found: v$Version entry exists" -ForegroundColor Green
     } else {
-        $content = $content -replace '</PropertyGroup>', "    <Version>$v</Version>`n  </PropertyGroup>"
-    }
-
-    if ($content -match '<AssemblyVersion>.*?</AssemblyVersion>') {
-        $content = $content -replace '<AssemblyVersion>.*?</AssemblyVersion>', "<AssemblyVersion>$v.0</AssemblyVersion>"
-    } else {
-        $content = $content -replace '</PropertyGroup>', "    <AssemblyVersion>$v.0</AssemblyVersion>`n  </PropertyGroup>"
-    }
-
-    Set-Content $csproj $content -NoNewline
-    Write-Success "csproj version updated."
-}
-
-# --- Build & Publish ---------------------------------------------------------
-
-function Invoke-Publish([string]$v) {
-    Write-Step "Building and publishing (Release, win-x64, self-contained)..."
-
-    $publishDir = ".\publish\v$v"
-    if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
-
-    dotnet publish NvidiaCi.csproj `
-        --configuration Release `
-        --runtime win-x64 `
-        --self-contained true `
-        -p:PublishSingleFile=true `
-        -p:IncludeNativeLibrariesForSelfExtract=true `
-        -p:Version=$v `
-        --output $publishDir `
-        --nologo -v quiet
-
-    if ($LASTEXITCODE -ne 0) {
-        Write-Fail "dotnet publish failed."
-    }
-    Write-Success "Published to $publishDir"
-    return $publishDir
-}
-
-# --- Zip artifact ------------------------------------------------------------
-
-function New-ZipArtifact([string]$publishDir, [string]$v) {
-    Write-Step "Creating zip artifact..."
-
-    $distDir = ".\dist"
-    if (-not (Test-Path $distDir)) { New-Item -ItemType Directory -Path $distDir | Out-Null }
-
-    $zipPath = "$distDir\NvidiaLite-v$v-win-x64.zip"
-    if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
-
-    Compress-Archive -Path "$publishDir\*" -DestinationPath $zipPath
-    $sizeMB = [math]::Round((Get-Item $zipPath).Length / 1MB, 2)
-    Write-Success "Artifact: $zipPath ($sizeMB MB)"
-    return $zipPath
-}
-
-# --- Git tag & push ----------------------------------------------------------
-
-function Invoke-GitTag([string]$v) {
-    Write-Step "Tagging release as v$v..."
-
-    $tag = "v$v"
-
-    # Check if tag already exists
-    $existing = git tag --list $tag
-    if ($existing) {
-        Write-Host "  Tag $tag already exists." -ForegroundColor Yellow
-        $confirm = Read-Host "  Delete and re-create? (y/N)"
-        if ($confirm -eq 'y') {
-            git tag -d $tag | Out-Null
-            git push origin --delete $tag 2>$null
-        } else {
-            Write-Fail "Aborted. Tag already exists."
+        Write-Host "   WARNING: Tidak ada entry v$Version di RELEASES.md" -ForegroundColor Red
+        Write-Host "   Tambahkan entry changelog sebelum release." -ForegroundColor Yellow
+        if (-not $DryRun) {
+            $confirm = Read-Host "   Lanjut tanpa entry RELEASES.md? (y/N)"
+            if ($confirm -ne "y") { exit 0 }
         }
     }
+} else {
+    Write-Host "   skip (RELEASES.md tidak ditemukan)" -ForegroundColor Gray
+}
 
-    # Stage csproj version bump
+# ── Step 3: Cek git working tree ─────────────────────────────────────────────
+Write-Host ""
+Write-Host "3. Checking git status..." -ForegroundColor Yellow
+
+$gitStatus = git status --porcelain
+if ($gitStatus) {
+    Write-Host "   Uncommitted changes:" -ForegroundColor Yellow
+    $gitStatus | ForEach-Object { Write-Host "     $_" -ForegroundColor DarkYellow }
+}
+
+# ── Step 4: Commit ───────────────────────────────────────────────────────────
+Write-Host ""
+Write-Host "4. Committing..." -ForegroundColor Yellow
+
+if (-not $DryRun) {
     git add NvidiaCi.csproj
-    $commitMsg = "chore: bump version to v$v"
-    git diff --cached --quiet
-    if ($LASTEXITCODE -ne 0) {
-        git commit -m $commitMsg | Out-Null
-        Write-Success "Committed version bump."
-    }
-
-    git tag -a $tag -m "Release $tag"
-    Write-Success "Tag $tag created."
-
-    $pushConfirm = Read-Host "`n  Push tag to origin? (y/N)"
-    if ($pushConfirm -eq 'y') {
-        git push origin HEAD
-        git push origin $tag
-        Write-Success "Pushed to origin. GitHub Actions release workflow will start automatically."
+    $staged = git diff --cached --name-only
+    if ($staged) {
+        git commit -m "chore: release $Tag"
+        Write-Host "   committed: chore: release $Tag" -ForegroundColor Green
     } else {
-        Write-Host "  Skipped push. Run manually:" -ForegroundColor Yellow
-        Write-Host "    git push origin HEAD && git push origin $tag" -ForegroundColor DarkYellow
+        Write-Host "   nothing to commit" -ForegroundColor Gray
     }
+} else {
+    Write-Host "   [dry run] would commit: chore: release $Tag" -ForegroundColor Gray
 }
 
-# --- Summary -----------------------------------------------------------------
+# ── Step 5: Tag ──────────────────────────────────────────────────────────────
+Write-Host ""
+Write-Host "5. Tagging..." -ForegroundColor Yellow
 
-function Write-Summary([string]$v, [string]$zipPath) {
-    Write-Host ""
-    Write-Host "  =============================================" -ForegroundColor DarkGreen
-    Write-Host "   Release v$v complete!" -ForegroundColor Green
-    Write-Host "  =============================================" -ForegroundColor DarkGreen
-    Write-Host ""
-    Write-Host "   Artifact : $zipPath" -ForegroundColor White
-    Write-Host "   Tag      : v$v" -ForegroundColor White
-    Write-Host ""
-    Write-Host "   Next steps:" -ForegroundColor Gray
-    Write-Host "   - Check GitHub Actions for the release workflow" -ForegroundColor Gray
-    Write-Host "   - Update RELEASES.md with changelog for v$v" -ForegroundColor Gray
-    Write-Host ""
+if (-not $DryRun) {
+    $existing = git tag -l $Tag
+    if ($existing) {
+        if ($ForceBuild) {
+            Write-Host "   [ForceBuild] deleting local tag $Tag..." -ForegroundColor Magenta
+            git tag -d $Tag | Out-Null
+            Write-Host "   [ForceBuild] deleting remote tag $Tag..." -ForegroundColor Magenta
+            git push origin ":refs/tags/$Tag" 2>$null
+        } else {
+            Write-Host "   Tag $Tag sudah ada." -ForegroundColor Yellow
+            $confirm = Read-Host "   Hapus dan buat ulang? (y/N)"
+            if ($confirm -eq "y") {
+                git tag -d $Tag | Out-Null
+                git push origin ":refs/tags/$Tag" 2>$null
+            } else {
+                Write-Host "  [FAIL] Aborted. Gunakan -ForceBuild untuk skip konfirmasi." -ForegroundColor Red
+                exit 1
+            }
+        }
+    }
+    git tag -a $Tag -m "Release $Version"
+    Write-Host "   created: $Tag" -ForegroundColor Green
+} else {
+    Write-Host "   [dry run] would create tag: $Tag" -ForegroundColor Gray
 }
 
-# =============================================================================
-# MAIN
-# =============================================================================
+# ── Step 6: Push ─────────────────────────────────────────────────────────────
+Write-Host ""
+Write-Host "6. Pushing..." -ForegroundColor Yellow
 
-Write-Banner
-Assert-Version $version
-Assert-Prerequisites
-Assert-CleanGit
-Update-CsprojVersion $version
-$publishDir = Invoke-Publish $version
-$zipPath    = New-ZipArtifact $publishDir $version
-Invoke-GitTag $version
-Write-Summary $version $zipPath
+if (-not $DryRun) {
+    $branch = git branch --show-current
+    git pull --rebase origin $branch
+
+    git push origin $branch
+    Write-Host "   pushed branch: $branch" -ForegroundColor Green
+
+    if ($ForceBuild) {
+        git push origin $Tag --force
+        Write-Host "   force pushed tag: $Tag" -ForegroundColor Magenta
+    } else {
+        git push origin $Tag
+        Write-Host "   pushed tag: $Tag" -ForegroundColor Green
+    }
+} else {
+    Write-Host "   [dry run] would push branch + tag $Tag" -ForegroundColor Gray
+}
+
+# ── Done ─────────────────────────────────────────────────────────────────────
+Write-Host ""
+if ($DryRun) {
+    Write-Host "  Dry run selesai. Jalankan tanpa -DryRun untuk release." -ForegroundColor Yellow
+} else {
+    $repoUrl = (git config --get remote.origin.url) `
+        -replace '\.git$', '' `
+        -replace '^git@github\.com:', 'https://github.com/'
+
+    Write-Host "  =============================================" -ForegroundColor DarkGreen
+    Write-Host "   Released $Tag " -ForegroundColor Green
+    Write-Host "  =============================================" -ForegroundColor DarkGreen
+    Write-Host ""
+    Write-Host "   Releases : $repoUrl/releases/tag/$Tag" -ForegroundColor Cyan
+    Write-Host "   Actions  : $repoUrl/actions"           -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "   Next steps:"                                       -ForegroundColor Gray
+    Write-Host "   - Tunggu GitHub Actions selesai build (~2 menit)"  -ForegroundColor Gray
+    Write-Host "   - Cek tab Releases untuk download .zip"            -ForegroundColor Gray
+    Write-Host "   - Update RELEASES.md jika belum"                   -ForegroundColor Gray
+}
+Write-Host ""
