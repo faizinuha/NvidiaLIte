@@ -5,8 +5,6 @@ C:\Aplikasi Win\NvidiaLIte\bin\Debug\net9.0-windows\NvidiaCi.deps.json
 C:\Aplikasi Win\NvidiaLIte\bin\Debug\net9.0-windows\NvidiaCi.runtimeconfig.json
 C:\Aplikasi Win\NvidiaLIte\bin\Debug\net9.0-windows\NvidiaCi.dll
 C:\Aplikasi Win\NvidiaLIte\bin\Debug\net9.0-windows\NvidiaCi.pdb
-C:\Aplikasi Win\NvidiaLIte\obj\Debug\net9.0-windows\OverlayWindow.baml
-C:\Aplikasi Win\NvidiaLIte\obj\Debug\net9.0-windows\OverlayWindow.g.cs
 C:\Aplikasi Win\NvidiaLIte\obj\Debug\net9.0-windows\App.g.cs
 C:\Aplikasi Win\NvidiaLIte\obj\Debug\net9.0-windows\NvidiaCi_MarkupCompile.cache
 C:\Aplikasi Win\NvidiaLIte\obj\Debug\net9.0-windows\NvidiaCi_MarkupCompile.lref
@@ -34,3 +32,7 @@ C:\Aplikasi Win\NvidiaLIte\bin\Debug\net9.0-windows\System.CodeDom.dll
 C:\Aplikasi Win\NvidiaLIte\bin\Debug\net9.0-windows\System.Management.dll
 C:\Aplikasi Win\NvidiaLIte\bin\Debug\net9.0-windows\runtimes\win\lib\net9.0\System.Management.dll
 C:\Aplikasi Win\NvidiaLIte\obj\Debug\net9.0-windows\NvidiaCi.csproj.Up2Date
+C:\Aplikasi Win\NvidiaLIte\obj\Debug\net9.0-windows\Views\OverlayWindow.baml
+C:\Aplikasi Win\NvidiaLIte\obj\Debug\net9.0-windows\Views\ScreenFilterWindow.baml
+C:\Aplikasi Win\NvidiaLIte\obj\Debug\net9.0-windows\Views\OverlayWindow.g.cs
+C:\Aplikasi Win\NvidiaLIte\obj\Debug\net9.0-windows\Views\ScreenFilterWindow.g.cs

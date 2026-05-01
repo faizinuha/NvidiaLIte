@@ -24,7 +24,7 @@ namespace NvidiaCi
 
         // Filter state
         private ScreenFilterWindow? _filterWindow;
-        private Color _selectedTintColor = Colors.White;
+        private System.Windows.Media.Color _selectedTintColor = System.Windows.Media.Colors.White;
         private FilterPreset _activePreset = FilterPreset.None;
 
 
@@ -509,13 +509,24 @@ namespace NvidiaCi
 
         private void FilterPreset_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not System.Windows.Controls.Button btn || _filterWindow == null) return;
+            if (sender is not System.Windows.Controls.Button btn || _filterWindow == null)
+            {
+                System.Diagnostics.Debug.WriteLine("Filter: button or window is null");
+                return;
+            }
 
             if (Enum.TryParse<FilterPreset>(btn.Tag?.ToString(), out var preset))
             {
+                System.Diagnostics.Debug.WriteLine($"Filter: Applying preset {preset}");
                 _activePreset = preset;
                 _filterWindow.ApplyFilter(preset);
+                _filterWindow.Topmost = true; // Force to front
+                _filterWindow.Show(); // Ensure visible
                 UpdateFilterStatus();
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"Filter: Failed to parse preset from tag {btn.Tag}");
             }
         }
 
@@ -528,7 +539,7 @@ namespace NvidiaCi
 
             try
             {
-                _selectedTintColor = (Color)ColorConverter.ConvertFromString(colorStr);
+                _selectedTintColor = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(colorStr);
                 _activePreset = FilterPreset.None; // custom mode
                 _filterWindow.ApplyCustomTint(_selectedTintColor, FilterOpacitySlider.Value);
                 UpdateFilterStatus();
@@ -560,17 +571,17 @@ namespace NvidiaCi
                 bool hasCustom = FilterOpacitySlider.Value > 0;
                 FilterStatusDot.Fill = hasCustom
                     ? new System.Windows.Media.SolidColorBrush(_selectedTintColor)
-                    : new System.Windows.Media.SolidColorBrush(Colors.Gray);
+                    : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Gray);
                 FilterStatusText.Text = hasCustom ? $"Custom tint active" : "No filter active";
                 FilterStatusText.Foreground = hasCustom
-                    ? new System.Windows.Media.SolidColorBrush(Colors.White)
-                    : new System.Windows.Media.SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88));
+                    ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.White)
+                    : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x88, 0x88, 0x88));
             }
             else
             {
-                FilterStatusDot.Fill = new System.Windows.Media.SolidColorBrush(Color.FromRgb(0x76, 0xB9, 0x00));
+                FilterStatusDot.Fill = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x76, 0xB9, 0x00));
                 FilterStatusText.Text = $"Preset: {_activePreset}";
-                FilterStatusText.Foreground = new System.Windows.Media.SolidColorBrush(Colors.White);
+                FilterStatusText.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.White);
             }
         }
         private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)

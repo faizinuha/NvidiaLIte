@@ -278,7 +278,28 @@
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel>
                                     <TextBlock Text="SCREEN FILTERS" Foreground="{StaticResource TextColor}" FontSize="12" FontWeight="Bold" Margin="0,0,0,5" Opacity="0.5"/>
-                                    <TextBlock Text="Applies a real-time color overlay on top of your screen." Foreground="#555555" FontSize="11" Margin="0,0,0,25"/>
+                                    <TextBlock Text="Applies a real-time color overlay on top of your screen." Foreground="#555555" FontSize="11" Margin="0,0,0,10"/>
+                                    
+                                    <!-- Preset Descriptions -->
+                                    <Border Background="#0D1A1A1A" BorderBrush="#1AFFFFFF" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,20">
+                                        <StackPanel>
+                                            <TextBlock Foreground="#AAAAAA" FontSize="10" TextWrapping="Wrap">
+                                                <Run FontWeight="Bold" Foreground="#76B900">🌟 VIVID</Run> - Warm orange tint, boost saturation
+                                            </TextBlock>
+                                            <TextBlock Foreground="#AAAAAA" FontSize="10" TextWrapping="Wrap" Margin="0,3,0,0">
+                                                <Run FontWeight="Bold" Foreground="#007AFF">❄️ COOL</Run> - Cool blue tint for focus
+                                            </TextBlock>
+                                            <TextBlock Foreground="#AAAAAA" FontSize="10" TextWrapping="Wrap" Margin="0,3,0,0">
+                                                <Run FontWeight="Bold" Foreground="#FF9500">🌙 NIGHT</Run> - Red tint, reduce blue light (eye comfort)
+                                            </TextBlock>
+                                            <TextBlock Foreground="#AAAAAA" FontSize="10" TextWrapping="Wrap" Margin="0,3,0,0">
+                                                <Run FontWeight="Bold" Foreground="#888888">🎬 CINEMA</Run> - Dark overlay, cinematic look
+                                            </TextBlock>
+                                            <TextBlock Foreground="#AAAAAA" FontSize="10" TextWrapping="Wrap" Margin="0,3,0,0">
+                                                <Run FontWeight="Bold" Foreground="#FFCC00">📖 READING</Run> - Sepia warm tone for comfortable reading
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
 
                                     <!-- Preset Buttons -->
                                     <TextBlock Text="PRESETS" Foreground="#FFAAAAAA" FontSize="11" FontWeight="Bold" Margin="0,0,0,15"/>
@@ -288,9 +309,22 @@
                                         <Button Content="❄️ COOL" Tag="CoolBlue" Click="FilterPreset_Click" Style="{StaticResource FilterPresetButtonStyle}" Margin="0,0,8,8"/>
                                         <Button Content="🌙 NIGHT" Tag="NightMode" Click="FilterPreset_Click" Style="{StaticResource FilterPresetButtonStyle}" Margin="0,0,8,8"/>
                                         <Button Content="🎬 CINEMA" Tag="Cinematic" Click="FilterPreset_Click" Style="{StaticResource FilterPresetButtonStyle}" Margin="0,0,8,8"/>
+                                        <Button Content="📖 READING" Tag="Reading" Click="FilterPreset_Click" Style="{StaticResource FilterPresetButtonStyle}" Margin="0,0,8,8"/>
                                     </WrapPanel>
 
                                     <Separator Background="#1AFFFFFF" Height="1" Margin="0,0,0,25"/>
+
+                                    <!-- Info Box -->
+                                    <Border Background="#0D1A1A00" BorderBrush="#33FFCC00" BorderThickness="1" CornerRadius="4" Padding="12,10" Margin="0,0,0,25">
+                                        <StackPanel>
+                                            <TextBlock Foreground="#FFFFCC00" FontSize="11" FontWeight="Bold" Margin="0,0,0,5">
+                                                ℹ️ CARA KERJA FILTER
+                                            </TextBlock>
+                                            <TextBlock Foreground="#CCCCCC" FontSize="10" TextWrapping="Wrap">
+                                                Filter ini bekerja sebagai overlay transparan di atas SEMUA aplikasi (game, browser, desktop). Tidak mengubah output GPU, hanya menambah lapisan warna di atas layar.
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
 
                                     <!-- Custom Tint -->
                                     <TextBlock Text="CUSTOM TINT" Foreground="#FFAAAAAA" FontSize="11" FontWeight="Bold" Margin="0,0,0,15"/>

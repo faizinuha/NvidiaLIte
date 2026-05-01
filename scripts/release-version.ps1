@@ -68,8 +68,12 @@ function Set-XmlTag([string]$xml, [string]$tag, [string]$value) {
     }
 }
 
-$newContent = Set-XmlTag $content "Version"         $Version
-$newContent = Set-XmlTag $newContent "AssemblyVersion" "$Version.0"
+# Version boleh pakai suffix (1.6.0-beta)
+$newContent = Set-XmlTag $content "Version" $Version
+
+# AssemblyVersion harus pure numeric — strip suffix
+$numericVersion = $Version -replace '-.*$', ''
+$newContent = Set-XmlTag $newContent "AssemblyVersion" "$numericVersion.0"
 
 if ($content -eq $newContent) {
     Write-Host "   unchanged: $csproj" -ForegroundColor Gray

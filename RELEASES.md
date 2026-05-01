@@ -2,6 +2,77 @@
 
 Semua pembaruan penting untuk project NVIDIA LITE akan dicatat di sini.
 
+## [v2.0.0] - 2025-01-XX
+
+### 🎨 Major UI Redesign - NVIDIA Industrial Red Theme
+
+- **Complete Visual Overhaul**: Redesign total dengan NVIDIA RTX Red (#E60012) sebagai accent color
+- **Industrial Design Language**: Card-based layout dengan rounded corners, sharp edges, dan professional gaming aesthetic
+- **Enhanced Game Cards**: Hover effects dengan red glow, "LAUNCH" overlay, dan improved spacing
+- **Modern Navigation**: Redesigned sidebar dengan 80px icons dan smooth transitions
+- **Premium Sliders**: Red glow effects pada thumb, improved track styling
+- **Filter Preset Buttons**: Industrial button style dengan hover states dan border animations
+
+### 🎮 Smart Game Scanner
+
+- **Registry-Based Detection**: Otomatis baca library Steam, Epic Games, GOG, dan EA dari Windows Registry
+- **Steam Multi-Library Support**: Parse `libraryfolders.vdf` untuk detect semua Steam library locations
+- **Epic Games Manifest Parser**: Baca install location dari `.item` manifest files
+- **GOG Registry Integration**: Detect installed GOG games dari registry
+- **Alphabetical Sorting**: Game list otomatis tersortir A-Z
+- **Improved Filtering**: Enhanced skip list untuk system files dan utilities
+
+### 🎨 Screen Filters
+
+- **Full-Screen Color Overlay**: Real-time filter yang bekerja di atas semua aplikasi (game, browser, desktop)
+- **6 Filter Presets**:
+  - 🌟 **VIVID** - Warm orange tint untuk boost saturation
+  - ❄️ **COOL** - Cool blue tint untuk focus
+  - 🌙 **NIGHT** - Red tint untuk reduce blue light (eye comfort)
+  - 🎬 **CINEMA** - Dark overlay untuk cinematic look
+  - 📖 **READING** - Sepia warm tone untuk comfortable reading
+  - OFF - Disable filter
+- **Custom Tint System**: 7 color swatches dengan intensity slider (0-60%)
+- **Click-Through Technology**: Filter tidak block mouse/keyboard input (WS_EX_TRANSPARENT)
+- **Hidden from Alt+Tab**: Filter window tidak muncul di task switcher
+- **Live Status Indicator**: Real-time display active filter dengan color preview
+
+### 🔔 Welcome Notification
+
+- **First-Run Detection**: Toast notification khusus untuk first-time users
+- **Persistent Flag**: Flag file di `%LocalAppData%\NvidiaCi\.first_run`
+- **Informative Messages**: Shortcut hints (Alt+Z, F10) langsung di notification
+- **Subsequent Runs**: Simplified notification untuk app startup berikutnya
+
+### 🛠️ Technical Improvements
+
+- **Color Ambiguity Fix**: Resolved `System.Drawing.Color` vs `System.Windows.Media.Color` conflicts
+- **WPF Color Alias**: Introduced `WpfColor` alias untuk cleaner code
+- **Win32 API Integration**: Extended window styles untuk click-through dan Alt+Tab hiding
+- **Registry Access**: Added `Microsoft.Win32` integration untuk game detection
+- **Regex Parsing**: VDF dan JSON manifest parsing untuk game libraries
+
+### 📁 Project Restructuring
+
+- **Organized Folder Structure**:
+  - `Core/` - GameItem, GameScanner, GameDataManager
+  - `Helpers/` - HotkeyHelper, ScreenshotHelper, SystemControlHelper
+  - `Views/` - OverlayWindow, ScreenFilterWindow
+- **Improved Maintainability**: Logical separation of concerns
+
+### 🚀 CI/CD & Release Automation
+
+- **GitHub Actions Workflows**:
+  - `dotnet-desktop.yml` - Build & Test pada push/PR
+  - `release.yml` - Automated release dengan tag trigger
+  - `pr-check.yml` - PR validation dengan format check
+- **PowerShell Release Script**: `release-version.ps1` dengan dry-run, force-build, dan RELEASES.md validation
+- **Automated Changelog**: Extract release notes dari RELEASES.md untuk GitHub Releases
+- **Self-Contained Builds**: Single `.exe` dengan bundled .NET runtime
+- **Version Management**: Auto-update `<Version>` dan `<AssemblyVersion>` di `.csproj`
+
+---
+
 ## [v1.4.] - 2025-12-19
 
 ### Added

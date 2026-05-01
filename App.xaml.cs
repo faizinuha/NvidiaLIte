@@ -63,7 +63,13 @@ namespace NvidiaCi
             
             _notifyIcon.Visible = true;
 
-            // 3. Tambahkan event handler untuk double-click
+            // 3. Show welcome notification
+            ShowWelcomeNotification();
+
+            // 3. Show welcome notification
+            ShowWelcomeNotification();
+
+            // 4. Tambahkan event handler untuk double-click
             _notifyIcon.DoubleClick += (s, args) => ToggleOverlay();
 
             // 4. Buat menu konteks (klik kanan)
@@ -75,6 +81,38 @@ namespace NvidiaCi
 
             // Penting: Hentikan aplikasi dari shutdown otomatis
             this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        }
+
+        private void ShowWelcomeNotification()
+        {
+            if (_notifyIcon == null) return;
+
+            // Check if this is first run
+            string appDataPath = System.IO.Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), 
+                "NvidiaCi");
+            string flagFile = System.IO.Path.Combine(appDataPath, ".first_run");
+
+            bool isFirstRun = !System.IO.File.Exists(flagFile);
+
+            if (isFirstRun)
+            {
+                // Create flag file
+                if (!System.IO.Directory.Exists(appDataPath))
+                    System.IO.Directory.CreateDirectory(appDataPath);
+                System.IO.File.WriteAllText(flagFile, DateTime.Now.ToString());
+            }
+
+            // Show notification (always show, but different message for first run)
+            string title = isFirstRun ? "🎮 Selamat Datang di NVIDIA Lite!" : "🎮 NVIDIA Lite";
+            string message = isFirstRun 
+                ? "Tekan Alt+Z untuk membuka overlay.\nF10 untuk screenshot.\n\nSelamat bermain! 🚀"
+                : "Aplikasi berjalan di background.\nTekan Alt+Z untuk membuka overlay.";
+
+            _notifyIcon.BalloonTipTitle = title;
+            _notifyIcon.BalloonTipText = message;
+            _notifyIcon.BalloonTipIcon = ToolTipIcon.Info;
+            _notifyIcon.ShowBalloonTip(5000); // Show for 5 seconds
         }
 
         public async void ToggleOverlay()

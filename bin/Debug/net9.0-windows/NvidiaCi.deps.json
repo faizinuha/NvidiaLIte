@@ -6,7 +6,7 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v9.0": {
-      "NvidiaCi/1.0.0": {
+      "NvidiaCi/1.6.0-beta": {
         "dependencies": {
           "NAudio": "2.2.1",
           "System.Management": "10.0.1"
@@ -140,7 +140,7 @@
     }
   },
   "libraries": {
-    "NvidiaCi/1.0.0": {
+    "NvidiaCi/1.6.0-beta": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
